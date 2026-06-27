@@ -855,7 +855,7 @@ function doCopy(text,btnId,defaultLabel){
 // AI鑑定APIを呼ぶ共通処理。サーバー側が「混雑中」と判定したエラー(retryable)のときだけ、
 // 少し待ってから自動で1回だけ再試行する。
 function fetchAiFortune(body){
-  return fetch('/api/ai-fortune',{
+  return startStream('/api/ai-fortune',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)
@@ -907,7 +907,7 @@ function startAiFortune(){
   }, function(){
     resultBox.textContent='ただいまアクセスが集中しているようです。少し時間をおいて自動的にもう一度お試ししています…';
   }).then(function(data){
-    resultBox.textContent=data.fortune;
+    resultBox.textContent=txt;
     btn.textContent='鑑定をはじめる';
     btn.disabled=false;
   }).catch(function(e){
@@ -1254,7 +1254,7 @@ function startAishoAiFortune(){
   }, function(){
     resultBox.textContent='ただいまアクセスが集中しているようです。少し時間をおいて自動的にもう一度お試ししています…';
   }).then(function(data){
-    resultBox.textContent=data.fortune;
+    resultBox.textContent=txt;
     if(btn){btn.textContent='二人を占う';btn.disabled=false;}
   }).catch(function(e){
     resultBox.innerHTML='<span style="color:#c4342d">'+ICONS.warn+'エラーが発生しました：'+esc(e.message)+'</span>';
@@ -1279,3 +1279,34 @@ if('serviceWorker' in navigator){
 </script>
 </body>
 </html>
+<script>
+async function startStream(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'サーバーエラー');
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let txt = '';
+  const resultBox = document.getElementById('aiResult') || document.getElementById('aishoResult');
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    const lines = chunk.split('\n');
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const json = line.slice(6).trim();
+      if (json === '[DONE]') continue;
+      try {
+        const parsed = JSON.parse(json);
+        const piece = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        txt += piece;
+        if (resultBox) resultBox.textContent = txt;
+      } catch {}
+    }
+  }
+  return { fortune: txt };
+}
+</script>
