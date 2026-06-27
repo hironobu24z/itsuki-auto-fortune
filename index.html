@@ -896,7 +896,7 @@ function startAiFortune(){
   }, function(){
     resultBox.textContent='ただいまアクセスが集中しているようです。少し時間をおいて自動的にもう一度お試ししています…';
   }).then(function(data){
-    resultBox.textContent=txt;
+    // ストリーミング済み
     btn.textContent='鑑定をはじめる';
     btn.disabled=false;
   }).catch(function(e){
