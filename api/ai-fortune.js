@@ -102,7 +102,8 @@ module.exports = async function handler(req, res) {
         try {
           const chunk = JSON.parse(trimmed.replace(/^,/, ''));
           const text = chunk?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          if (text) res.write(text);
+          res.write(JSON.stringify({raw: trimmed}) + "
+"); if (text) res.write(text);
         } catch {}
       }
     }
