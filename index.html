@@ -1269,79 +1269,13 @@ function copyAishoAiResult(){
 }
 </script>
 <script>
-// Service Worker registration for offline support
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').then(function(reg){
-    // Check for updates periodically
-    setInterval(function(){reg.update();},60*60*1000);
-  }).catch(function(e){console.log('SW registration failed:',e);});
-}
-</script>
-</body>
-</html>
-<script>
-async function startStream(url, options) {
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error || 'サーバーエラー');
-  }
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let txt = '';
-  const resultBox = document.getElementById('aiResult') || document.getElementById('aishoResult');
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    const lines = chunk.split('\n');
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const json = line.slice(6).trim();
-      if (json === '[DONE]') continue;
-      try {
-        const parsed = JSON.parse(json);
-        const piece = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        txt += piece;
-        if (resultBox) resultBox.textContent = txt;
-      } catch {}
-    }
-  }
-  return { fortune: txt };
-}
-</script>
-<script>
-async function startStream(url, options) {
-  const resultBox = document.getElementById('aiResult') || document.getElementById('aishoResult');
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error || 'サーバーエラー');
-  }
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let txt = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    txt += decoder.decode(value, { stream: true });
-    if (resultBox) resultBox.textContent = txt;
-  }
-  return { fortune: txt };
-}
-</script>
-<script>
 async function startStream(url, options) {
   const resultBox = document.getElementById('aiResult') || document.getElementById('aishoResult');
   const res = await fetch(url, options);
   if (!res.ok) {
     const text = await res.text();
-    try {
-      const data = JSON.parse(text);
-      throw new Error(data.error || 'サーバーエラー');
-    } catch {
-      throw new Error('サーバーエラー（status ' + res.status + '）');
-    }
+    try { const data = JSON.parse(text); throw new Error(data.error || 'サーバーエラー'); }
+    catch(e) { if(e.message !== 'サーバーエラー') throw new Error('サーバーエラー（status ' + res.status + '）'); throw e; }
   }
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -1355,3 +1289,5 @@ async function startStream(url, options) {
   return { fortune: txt };
 }
 </script>
+</body>
+</html>
