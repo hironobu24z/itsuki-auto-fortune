@@ -56,6 +56,27 @@ function isOverloadedError(status, data) {
   return /overload|high demand|unavailable/i.test(message);
 }
 
+async function callGemini(apiKey, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
+  const body = JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+    generationConfig: { temperature: 0.7 }
+  });
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body
+  });
+  const data = await res.json();
+  return { res, data };
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -74,34 +95,39 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'リクエストの形式が正しくありません' });
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
+  const prompt = buildPrompt(requestData);
+
+  // Vercelは60秒の余裕があるので、混雑エラー時はサーバー側でリトライする
+  const delays = [3000, 6000]; // 3秒後・さらに6秒後の2回リトライ
+  let lastData, lastRes;
 
   try {
-    const geminiRes = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: buildPrompt(requestData) }] }],
-        systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-        generationConfig: { temperature: 0.7 }
-      })
-    });
+    for (let attempt = 0; attempt <= delays.length; attempt++) {
+      const { res: geminiRes, data } = await callGemini(apiKey, prompt);
+      lastRes = geminiRes;
+      lastData = data;
 
-    const data = await geminiRes.json();
+      if (geminiRes.ok) {
+        const fortune = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!fortune) return res.status(502).json({ error: 'AIから鑑定文を取得できませんでした。もう一度お試しください。' });
+        return res.status(200).json({ fortune });
+      }
 
-    if (!geminiRes.ok) {
-      const message = (data && data.error && data.error.message) || `Gemini APIエラー（status ${geminiRes.status}）`;
       const overloaded = isOverloadedError(geminiRes.status, data);
-      return res.status(502).json({
-        error: overloaded ? 'ただいまアクセスが集中しております。少し時間をおいてもう一度お試しください。' : message,
-        retryable: overloaded
-      });
+      if (!overloaded || attempt === delays.length) break;
+
+      // 混雑エラーなら少し待ってリトライ
+      await sleep(delays[attempt]);
     }
 
-    const fortune = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!fortune) return res.status(502).json({ error: 'AIから鑑定文を取得できませんでした。もう一度お試しください。' });
+    // 全リトライ失敗
+    const message = (lastData && lastData.error && lastData.error.message) || `Gemini APIエラー（status ${lastRes.status}）`;
+    const overloaded = isOverloadedError(lastRes.status, lastData);
+    return res.status(502).json({
+      error: overloaded ? 'ただいまアクセスが集中しております。少し時間をおいてもう一度お試しください。' : message,
+      retryable: overloaded
+    });
 
-    return res.status(200).json({ fortune });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
