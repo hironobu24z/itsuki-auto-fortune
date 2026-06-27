@@ -1310,3 +1310,23 @@ async function startStream(url, options) {
   return { fortune: txt };
 }
 </script>
+<script>
+async function startStream(url, options) {
+  const resultBox = document.getElementById('aiResult') || document.getElementById('aishoResult');
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'サーバーエラー');
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let txt = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    txt += decoder.decode(value, { stream: true });
+    if (resultBox) resultBox.textContent = txt;
+  }
+  return { fortune: txt };
+}
+</script>

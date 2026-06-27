@@ -1,4 +1,3 @@
-// いつきの算命学 - AI自動鑑定 Vercel Serverless Function（ストリーミング版）
 const MODEL = 'gemini-3.5-flash';
 
 const SYSTEM_INSTRUCTION = `
@@ -24,7 +23,7 @@ const SYSTEM_INSTRUCTION = `
 渡された計算済みの運勢データ（大運・年運・月運・日運）をそのまま根拠として使ってください。自分で干支を計算し直すことは絶対にしないこと。isTcはその期間が天中殺、isIjouは異常干支であることを示します。
 
 🎂【誕生日の絶対ルール】
-現在の日時の月日と実際の生年月日の月日が完全に一致する場合のみ「誕生日」と言ってよい。干支の一致を誕生日と混同することは絶対禁止。
+現在の日時の月日と実際の生年月日の月日が完全一致する場合のみ「誕生日」と言ってよい。干支の一致を誕生日と混同することは絶対禁止。
 `.trim();
 
 function getTodayInfoJP() {
@@ -63,7 +62,7 @@ module.exports = async function handler(req, res) {
   }
 
   const prompt = buildPrompt(requestData);
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?key=${apiKey}`;
   const body = JSON.stringify({
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
@@ -83,18 +82,29 @@ module.exports = async function handler(req, res) {
       return res.status(502).json({ error: message });
     }
 
-    // SSEストリームをそのままクライアントに流す
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('X-Accel-Buffering', 'no');
 
     const reader = geminiRes.body.getReader();
     const decoder = new TextDecoder();
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      res.write(decoder.decode(value, { stream: true }));
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed === '[' || trimmed === ']' || trimmed === ',') continue;
+        try {
+          const chunk = JSON.parse(trimmed.replace(/^,/, ''));
+          const text = chunk?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (text) res.write(text);
+        } catch {}
+      }
     }
     res.end();
 
