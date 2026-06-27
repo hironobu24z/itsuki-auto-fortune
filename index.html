@@ -1259,7 +1259,7 @@ function copyAishoAiResult(){
 </script>
 <script>
 async function startStream(url, options) {
-  const resultBox = document.getElementById('aiFortuneResult') || document.getElementById('aishoResult');
+  const resultBox = document.getElementById('aiFortuneResult') || document.getElementById('aishoResult'); console.log('resultBox:', resultBox);
   const res = await fetch(url, options);
   if (!res.ok) {
     const text = await res.text();
