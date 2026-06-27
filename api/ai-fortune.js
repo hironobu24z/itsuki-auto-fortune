@@ -35,7 +35,8 @@ module.exports = async function handler(req, res) {
   try { d = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
   catch (e) { return res.status(400).json({error: 'リクエスト形式エラー'}); }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?key=${apiKey}`;
+  // ?alt=sse を追加してSSE形式で受け取る
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
   const body = JSON.stringify({
     contents: [{role: 'user', parts: [{text: buildPrompt(d)}]}],
     systemInstruction: {parts: [{text: SYSTEM_INSTRUCTION}]},
@@ -51,9 +52,11 @@ module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('X-Accel-Buffering', 'no');
+
     const reader = geminiRes.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
+
     while (true) {
       const {done, value} = await reader.read();
       if (done) break;
@@ -62,9 +65,12 @@ module.exports = async function handler(req, res) {
       buf = lines.pop();
       for (const line of lines) {
         const t = line.trim();
-        if (!t || t === '[' || t === ']' || t === ',') continue;
+        // SSE形式: "data: {...}" の行だけ処理
+        if (!t.startsWith('data: ')) continue;
+        const json = t.slice(6).trim();
+        if (json === '[DONE]') continue;
         try {
-          const chunk = JSON.parse(t.replace(/^,/, ''));
+          const chunk = JSON.parse(json);
           const text = chunk?.candidates?.[0]?.content?.parts?.[0]?.text || '';
           if (text) res.write(text);
         } catch(e) {}
