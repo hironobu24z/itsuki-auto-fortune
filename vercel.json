@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/ai-fortune.js": {
+      "maxDuration": 60
+    }
+  }
+}

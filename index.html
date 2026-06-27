@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="いつきの算命学">
+<meta name="theme-color" content="#1a1a2e">
+<title>いつきの算命学</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fbfaf7;
+  --glow-gold: #f5e3c8;
+  --glow-blue: #e9eefb;
+  --ink: #1a1a2e;
+  --ink-soft: #6b6b7d;
+  --gold: #b8860b;
+  --rose: #c4342d;
+  --line: #e9e3d8;
+  --glass: rgba(255,255,255,0.68);
+  --glass-strong: rgba(255,255,255,0.85);
+  --font-display: 'Noto Serif JP','Hiragino Mincho ProN',serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { background:var(--bg); }
+body {
+  font-family: 'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif;
+  background: var(--bg); color: #222;
+  min-height: 100vh; padding-bottom: env(safe-area-inset-bottom);
+  position: relative; overflow-x: hidden;
+}
+.bg-orb {
+  position: fixed; border-radius: 50%; filter: blur(60px);
+  pointer-events: none; z-index: 0; opacity: .55;
+  animation: orbFloat 16s ease-in-out infinite alternate;
+}
+.bg-orb-a { width: 420px; height: 420px; top: -120px; left: -100px; background: radial-gradient(circle,var(--glow-gold),transparent 70%); }
+.bg-orb-b { width: 480px; height: 480px; bottom: -160px; right: -140px; background: radial-gradient(circle,var(--glow-blue),transparent 70%); animation-delay: -8s; }
+@keyframes orbFloat { from{ transform:translateY(0) } to{ transform:translateY(28px) } }
+@media (prefers-reduced-motion: reduce) {
+  .bg-orb { animation: none; }
+}
+.app { max-width: 960px; margin: 0 auto; padding: 16px 12px; position: relative; z-index: 1; }
+h1 { text-align:center; font-family:var(--font-display); font-size:21px; font-weight:700; letter-spacing:4px; color:var(--ink); margin-bottom:2px; }
+.sub { text-align:center; font-size:11px; color:#9a968c; letter-spacing:1px; margin-bottom:16px; }
+
+/* Wide screen layout */
+@media (min-width: 700px) {
+  .app { padding: 24px 32px; }
+  .wide-layout { display:flex; gap:24px; align-items:flex-start; }
+  .wide-left { flex: 0 0 320px; }
+  .wide-right { flex: 1; min-width: 0; }
+  .aisho-forms { gap: 16px; }
+  .aisho-results { gap: 16px; }
+  h1 { font-size: 26px; }
+}
+
+/* Form */
+.form-box {
+  background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border:1px solid rgba(255,255,255,0.9); border-radius:18px;
+  padding: 20px 18px; margin-bottom: 20px;
+  box-shadow: 0 12px 32px -16px rgba(26,26,46,0.18);
+}
+.form-row { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; margin-bottom:12px; }
+.form-label { font-size:11px; color:#888; margin-bottom:3px; display:block; }
+.form-select {
+  padding:8px 10px; border-radius:8px; border:1px solid #ccc; font-size:15px;
+  background:#fff; appearance:auto; -webkit-appearance:auto;
+}
+.gender-group { display:flex; gap:6px; }
+.gender-btn {
+  padding:8px 18px; border-radius:8px; font-size:14px; font-weight:700;
+  border:1px solid #ccc; background:#fff; color:#888; cursor:pointer;
+  transition: all .15s;
+}
+.gender-btn.active { border:2px solid #1a5fb4; background:#e8f0fe; color:#1a5fb4; }
+.calc-btn {
+  width:100%; padding:14px 0; border-radius:12px; border:none; cursor:pointer;
+  background: linear-gradient(135deg,#1a1a2e,#272750); color:#fff;
+  font-size:16px; font-weight:700; letter-spacing:5px;
+  box-shadow: 0 10px 24px -10px rgba(26,26,46,0.55);
+  -webkit-appearance:none; transition: all .15s;
+}
+.calc-btn:active { opacity:0.85; transform:scale(0.98); }
+.calc-btn:disabled { opacity:0.6; cursor:default; box-shadow:none; }
+
+/* Result */
+.result-title {
+  text-align:center; font-family:var(--font-display); font-size:15px; font-weight:600; margin-bottom:16px;
+  border-bottom:2px solid var(--rose); padding-bottom:8px; letter-spacing:1px;
+}
+.sec-title {
+  border-bottom:2px solid var(--ink); margin-bottom:10px; padding-bottom:3px;
+  font-family:var(--font-display); font-size:15px; font-weight:600; letter-spacing:2px;
+}
+
+/* Insen table */
+.insen-table { width:100%; border-collapse:collapse; text-align:center; font-size:14px; }
+.insen-table th { padding:6px 4px; font-size:12px; font-weight:700; background:#1a1a2e; color:#fff; }
+.insen-table td { padding:6px; border:1px solid #ddd; background:#fff; }
+.insen-table .lbl { background:#f8f6f2; font-weight:600; font-size:12px; color:#666; width:55px; }
+.insen-table .big { font-size:22px; font-weight:800; letter-spacing:2px; }
+.insen-table .ijou { color:#c4342d; }
+.insen-table .zk-main { font-weight:700; font-size:16px; }
+.insen-table .zk-sub { font-size:12px; color:#bbb; letter-spacing:3px; padding:4px 6px; }
+.zk-sub-lbl { font-size:10px; color:#aaa; padding:4px; }
+
+/* Pills */
+.pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; font-size:11px; }
+.pill { border-radius:5px; padding:4px 10px; font-weight:600; }
+.pill-dark { background:#1a1a2e; color:#fff; }
+.pill-warn { background:#c4342d; color:#fff; }
+.pill-light { background:#f0eee8; color:#333; }
+
+/* Jintaizu */
+.jintaizu { display:grid; grid-template-columns:1fr 1fr 1fr; gap:3px; max-width:440px; margin:0 auto 6px; }
+.jcell {
+  border-radius:8px; padding:10px 4px; text-align:center; min-height:76px;
+  display:flex; flex-direction:column; justify-content:center; gap:3px;
+  border:1px solid #e8e4dc;
+}
+.jcell.hl { border:2px solid #b8860b; }
+.jcell-pos { font-size:10px; font-weight:700; }
+.jcell-pos.ten { color:#c4342d; }
+.jcell-pos.twelve { color:#b8860b; }
+.jcell-star { font-size:16px; font-weight:800; letter-spacing:1px; color:#222; }
+.jcell-energy { font-size:10px; color:#7c3aed; }
+.energy-total { text-align:center; font-size:11px; color:#888; margin:4px 0 16px; }
+
+/* Taiun */
+.taiun-table { width:100%; border-collapse:collapse; font-size:12px; text-align:center; }
+.taiun-table th { padding:5px 3px; font-size:11px; background:#1a1a2e; color:#fff; }
+.taiun-table td { padding:5px 3px; border:1px solid #ddd; }
+.taiun-table .tc-row { background:#fff0f0; }
+.star-badge {
+  display:inline-block; padding:2px 7px; border-radius:4px;
+  color:#fff; font-size:11px; font-weight:700; letter-spacing:.5px;
+}
+.tc-mark { color:#c4342d; font-size:10px; margin-left:4px; }
+.ijou-note { font-size:11px; color:#c4342d; margin:2px 0 8px; }
+
+/* Copy button */
+.copy-btn {
+  display:block; width:100%; padding:12px 0; border-radius:10px; border:2px solid #1a1a2e;
+  background:#fff; color:#1a1a2e; font-size:14px; font-weight:700; letter-spacing:3px;
+  cursor:pointer; margin-bottom:20px; -webkit-appearance:none;
+  transition: all .15s;
+}
+.copy-btn:active { background:#1a1a2e; color:#fff; }
+.copy-btn.copied { background:#16a34a; color:#fff; border-color:#16a34a; }
+
+/* Toggle sections */
+.toggle-btn {
+  width:100%; padding:12px 16px; border:1px solid #d0ccc4; border-radius:10px;
+  background:#fff; cursor:pointer; font-size:14px; font-weight:700;
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:8px; color:#333; -webkit-appearance:none;
+}
+.toggle-btn:active { background:#f5f3ef; }
+.toggle-btn .arrow { font-size:12px; color:#999; transition:transform .2s; }
+.toggle-btn .arrow.open { transform:rotate(180deg); }
+.toggle-content { display:none; margin-bottom:16px; }
+.toggle-content.open { display:block; }
+.unsei-table { width:100%; border-collapse:collapse; font-size:12px; text-align:center; }
+.unsei-table th { padding:5px 3px; font-size:10px; background:#1a1a2e; color:#fff; position:sticky; top:0; }
+.unsei-table td { padding:4px 3px; border:1px solid #ddd; }
+.unsei-table .today-row { background:#e8f5e9; font-weight:700; }
+.unsei-table .this-row { background:#fff8e1; }
+.unsei-scroll { max-height:400px; overflow-y:auto; border:1px solid #ddd; border-radius:8px; -webkit-overflow-scrolling:touch; }
+
+/* 位相法 */
+.isou-list { margin-bottom:16px; }
+.isou-item {
+  display:flex; align-items:center; gap:8px; padding:8px 12px;
+  border-radius:8px; margin-bottom:4px; font-size:13px;
+}
+.isou-type {
+  display:inline-block; padding:2px 8px; border-radius:4px;
+  color:#fff; font-size:11px; font-weight:800; min-width:28px; text-align:center;
+}
+.isou-name { font-weight:800; min-width:70px; }
+.isou-detail { color:#555; font-size:12px; }
+.isou-none { color:#999; font-size:13px; padding:8px 0; }
+
+@media (max-width:400px) {
+  .app { padding: 12px 8px; }
+  .insen-table .big { font-size:18px; }
+  .jcell-star { font-size:14px; }
+  .form-select { font-size:14px; padding:6px 8px; }
+}
+
+/* 2列表示（陰占+陽占） */
+.meishiki-2col { display:flex; gap:6px; align-items:flex-start; margin-bottom:4px; }
+.col-insen { flex:0 0 46%; min-width:0; overflow-x:auto; }
+.col-yousen { flex:1; min-width:0; }
+.col-insen .insen-table { font-size:11px; }
+.col-insen .insen-table th { font-size:10px; padding:4px 2px; }
+.col-insen .insen-table td { padding:4px 2px; }
+.col-insen .insen-table .big { font-size:17px; }
+.col-insen .insen-table .lbl { font-size:10px; width:40px; }
+.col-insen .insen-table .zk-main { font-size:12px; }
+.col-insen .insen-table .zk-sub { font-size:10px; }
+.col-yousen .jintaizu { grid-template-columns:1fr 1fr 1fr; gap:2px; }
+.col-yousen .jcell { padding:6px 2px; min-height:60px; gap:2px; }
+.col-yousen .jcell-pos { font-size:9px; }
+.col-yousen .jcell-star { font-size:12px; }
+.col-yousen .jcell-energy { font-size:9px; }
+.col-yousen .energy-total { font-size:10px; }
+.col-label { font-size:11px; font-weight:800; color:#888; letter-spacing:1px; margin-bottom:4px; }
+
+/* 相性占いページ */
+.page { display:none; }
+.page.active { display:block; }
+.aisho-header { display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+.back-btn {
+  padding:6px 12px; border-radius:8px; border:1px solid #ccc;
+  background:#fff; font-size:13px; cursor:pointer; -webkit-appearance:none;
+}
+.aisho-forms { display:flex; gap:6px; margin-bottom:14px; }
+.aisho-form-col { flex:1; min-width:0; background:#faf8f5; border:1px solid #e5e0d8; border-radius:10px; padding:10px 8px; }
+.aisho-form-col .form-label { font-size:10px; }
+.aisho-form-col .form-select { font-size:13px; padding:6px 6px; width:100%; margin-bottom:6px; }
+.aisho-form-col .gender-btn { padding:6px 10px; font-size:12px; }
+.aisho-col-title { font-size:12px; font-weight:800; color:#1a1a2e; margin-bottom:8px; text-align:center; padding-bottom:6px; border-bottom:2px solid #1a1a2e; }
+.aisho-results { display:flex; gap:6px; }
+.aisho-result-col { flex:1; min-width:0; }
+.aisho-result-col .sec-title { font-size:11px; letter-spacing:1px; }
+.aisho-result-col .pills { font-size:10px; }
+.aisho-result-col .pill { padding:3px 6px; font-size:9px; }
+
+/* 占いたいこと（AI自動鑑定） */
+.ai-fortune-box {
+  background: linear-gradient(180deg,rgba(255,255,255,0.85),rgba(255,248,240,0.75));
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border:1px solid rgba(184,134,11,0.25); border-radius:18px;
+  padding:20px 18px; margin-bottom:20px;
+  box-shadow: 0 14px 30px -18px rgba(196,52,45,0.25);
+}
+.ai-fortune-title { font-family:var(--font-display); font-size:16px; font-weight:600; margin-bottom:4px; color:var(--ink); }
+.ai-fortune-sub { font-size:11px; color:var(--ink-soft); margin-bottom:12px; }
+.ai-fortune-label { display:block; font-size:12px; font-weight:600; color:#888; margin-bottom:5px; }
+.ai-fortune-textarea {
+  width:100%; padding:12px 14px; border:1px solid #ddd5c5; border-radius:10px;
+  font-size:14px; margin-bottom:12px; resize:vertical; min-height:84px;
+  -webkit-appearance:none; background:rgba(255,255,255,0.9); font-family:inherit; line-height:1.6;
+}
+.ai-fortune-btn {
+  width:100%; padding:14px 0; border-radius:12px; border:none; cursor:pointer;
+  background: linear-gradient(135deg,#c4342d,#9e2a23); color:#fff;
+  font-size:15px; font-weight:700; letter-spacing:3px;
+  box-shadow: 0 10px 24px -10px rgba(196,52,45,0.55);
+  -webkit-appearance:none; transition: all .15s;
+}
+.ai-fortune-btn:active { opacity:0.85; }
+.ai-fortune-btn:disabled { opacity:0.6; cursor:default; box-shadow:none; }
+.ai-result-box { margin-top:14px; }
+.ai-result-title { font-family:var(--font-display); font-size:14px; font-weight:600; margin-bottom:6px; color:var(--ink); }
+.ai-result-content {
+  padding:16px; background:rgba(255,255,255,0.92); border:1px solid #ece6d8; border-radius:12px;
+  white-space:pre-wrap; line-height:1.8; font-size:14px; max-height:420px; overflow-y:auto;
+}
+.ai-copy-btn {
+  margin-top:10px; width:100%; padding:11px 0; border-radius:10px; border:1px solid #1a5fb4;
+  background:#fff; color:#1a5fb4; font-size:13px; font-weight:700; cursor:pointer;
+  -webkit-appearance:none; transition: all .15s;
+}
+.ai-copy-btn:active { background:#1a5fb4; color:#fff; }
+.ai-copy-btn.copied { background:#16a34a; color:#fff; border-color:#16a34a; }
+
+/* トップに戻る */
+.topback-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:7px 14px; border-radius:20px; border:1px solid var(--line);
+  background:rgba(255,255,255,0.75); color:var(--ink-soft); font-size:12px; font-weight:700;
+  cursor:pointer; -webkit-appearance:none; transition: all .15s;
+}
+.topback-btn:active { background:#fff; }
+
+/* モード選択（トップ画面） */
+.hero { text-align:center; padding:38px 12px 10px; }
+.hero-title { font-family:var(--font-display); font-size:28px; font-weight:700; letter-spacing:6px; color:var(--ink); margin-bottom:10px; }
+.hero-sub { font-size:13px; color:var(--ink-soft); line-height:1.9; max-width:380px; margin:0 auto 8px; }
+.mode-cards { display:grid; grid-template-columns:1fr; gap:14px; max-width:560px; margin:28px auto 12px; padding:0 4px; }
+@media (min-width:560px){ .mode-cards { grid-template-columns:1fr 1fr; } }
+.mode-card {
+  display:block; width:100%; text-align:left; cursor:pointer; -webkit-appearance:none;
+  background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border:1px solid rgba(255,255,255,0.9); border-radius:20px;
+  padding:24px 20px; box-shadow: 0 16px 36px -20px rgba(26,26,46,0.28);
+  transition: transform .2s, box-shadow .2s;
+}
+.mode-card:active { transform:scale(0.98); }
+@media (hover:hover){
+  .mode-card:hover { transform:translateY(-4px); box-shadow:0 22px 42px -18px rgba(26,26,46,0.32); }
+}
+.mode-card-icon {
+  width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:22px; margin-bottom:14px; background:linear-gradient(135deg,#fff,#f5f0e6); box-shadow:inset 0 0 0 1px rgba(184,134,11,0.2);
+  color:var(--gold);
+}
+.mode-card.is-aisho .mode-card-icon { color:var(--rose); }
+.mode-card-title { font-family:var(--font-display); font-size:17px; font-weight:600; color:var(--ink); margin-bottom:6px; letter-spacing:1px; }
+.mode-card-desc { font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin-bottom:14px; }
+.mode-card-cta { font-size:12px; font-weight:700; color:var(--gold); letter-spacing:1px; }
+.mode-card.is-aisho .mode-card-cta { color:var(--rose); }
+</style>
+</head>
+<body>
+<div class="bg-orb bg-orb-a"></div>
+<div class="bg-orb bg-orb-b"></div>
+
+<div class="app" id="mode-select">
+  <div class="hero">
+    <h1 class="hero-title">いつきの算命学</h1>
+    <p class="hero-sub">生まれ持った命式から、いまのあなたに寄り添う鑑定を。<br>知りたいモードを選んでください。</p>
+  </div>
+  <div class="mode-cards">
+    <button class="mode-card is-hitori" onclick="showMain()">
+      <div class="mode-card-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.2A8.4 8.4 0 1 1 9.8 4a7 7 0 0 0 10.2 10.2Z"/></svg></div>
+      <div class="mode-card-title">一人で占う</div>
+      <div class="mode-card-desc">あなた自身の生年月日から命式を算出し、知りたいことをやさしく鑑定します。</div>
+      <div class="mode-card-cta">はじめる →</div>
+    </button>
+    <button class="mode-card is-aisho" onclick="showAisho()">
+      <div class="mode-card-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.1"/><circle cx="16.2" cy="9.3" r="2.6"/><path d="M3 20.2c.5-3.7 2.9-5.8 6-5.8s5.5 2.1 6 5.8"/><path d="M14.6 14.9c2.1.4 3.6 2 4.9 5.6"/></svg></div>
+      <div class="mode-card-title">相性を占う</div>
+      <div class="mode-card-desc">お二人の生年月日から、二人の関係性や相性をやさしく鑑定します。</div>
+      <div class="mode-card-cta">はじめる →</div>
+    </button>
+  </div>
+</div>
+
+<div class="app" id="main-page" style="display:none"></div>
+<div class="app" id="aisho-page" style="display:none"></div>
+
+<script>
+// ====== ENGINE (identical logic to verified JSX) ======
+var STEMS=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+var BRANCHES=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+var STEM_EL={"甲":"木","乙":"木","丙":"火","丁":"火","戊":"土","己":"土","庚":"金","辛":"金","壬":"水","癸":"水"};
+var KANGOU={0:5,5:0,1:6,6:1,2:7,7:2,3:8,8:3,4:9,9:4};
+var IJOU=new Set([11,12,18,19,23,24,25,30,35,36,37,48,54]);
+var K60=[];for(var i=0;i<60;i++)K60.push({num:i+1,stem:STEMS[i%10],branch:BRANCHES[i%12],si:i%10,bi:i%12,name:STEMS[i%10]+BRANCHES[i%12],isIjou:IJOU.has(i+1)});
+
+function getTcName(n){var g=Math.ceil(n/10);return["戌亥","申酉","午未","辰巳","寅卯","子丑"][g-1]+"天中殺";}
+function getTcBr(n){var g=Math.ceil(n/10);return[["戌","亥"],["申","酉"],["午","未"],["辰","巳"],["寅","卯"],["子","丑"]][g-1];}
+
+var ZK={"子":[["癸",31]],"丑":[["癸",9],["辛",3],["己",19]],"寅":[["戊",8],["丙",7],["甲",16]],"卯":[["乙",31]],"辰":[["乙",9],["癸",3],["戊",19]],"巳":[["戊",5],["庚",9],["丙",17]],"午":[["己",20],["丁",11]],"未":[["丁",9],["乙",3],["己",19]],"申":[["戊",10],["壬",3],["庚",18]],"酉":[["辛",31]],"戌":[["辛",9],["丁",3],["戊",19]],"亥":[["甲",12],["壬",19]]};
+
+function getZK(br,dc){var t=ZK[br],c=0;for(var i=0;i<t.length;i++){c+=t[i][1];if(dc<=c)return t[i][0];}return t[t.length-1][0];}
+function allZK(br){return ZK[br].map(function(x){return x[0];});}
+
+var PROD={"木":"火","火":"土","土":"金","金":"水","水":"木"};
+var OVER={"木":"土","土":"水","水":"火","火":"金","金":"木"};
+function tenS(d,o){var de=STEM_EL[STEMS[d]],oe=STEM_EL[STEMS[o]],sp=(d%2)===(o%2);if(de===oe)return sp?"貫索星":"石門星";if(PROD[de]===oe)return sp?"鳳閣星":"調舒星";if(PROD[oe]===de)return sp?"龍高星":"玉堂星";if(OVER[de]===oe)return sp?"禄存星":"司禄星";if(OVER[oe]===de)return sp?"車騎星":"牽牛星";return"?";}
+
+var T12=["天貴星","天恍星","天南星","天禄星","天将星","天堂星","天胡星","天極星","天庫星","天馳星","天報星","天印星"];
+var T12E={"天貴星":9,"天恍星":7,"天南星":10,"天禄星":11,"天将星":12,"天堂星":8,"天胡星":4,"天極星":2,"天庫星":5,"天馳星":1,"天報星":3,"天印星":6};
+var CS={0:11,1:6,2:2,3:9,4:2,5:9,6:5,7:0,8:8,9:3};
+function twS(d,b){var s=CS[d];var off=d%2===0?((b-s)%12+12)%12:((s-b)%12+12)%12;return T12[off];}
+
+function toJDN(y,m,d){var a=Math.floor((14-m)/12),yy=y+4800-a,mm=m+12*a-3;return d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;}
+function fromJDN(j){var a=j+32044,b=Math.floor((4*a+3)/146097),c=a-Math.floor(146097*b/4),d=Math.floor((4*c+3)/1461),e=c-Math.floor(1461*d/4),m=Math.floor((5*e+2)/153);return{y:100*b+d-4800+Math.floor(m/10),m:m+3-12*Math.floor(m/10),d:e-Math.floor((153*m+2)/5)+1};}
+function sunL(jd){var T=(jd-2451545)/36525,L=280.46646+36000.76983*T+.0003032*T*T;L=((L%360)+360)%360;var M=357.52911+35999.05029*T-.0001537*T*T;M=((M%360)+360)%360;var Mr=M*Math.PI/180;var C=(1.914602-.004817*T-.000014*T*T)*Math.sin(Mr)+(.019993-.000101*T)*Math.sin(2*Mr)+.000289*Math.sin(3*Mr);var s=L+C,w=125.04-1934.136*T;s-=.00569+.00478*Math.sin(w*Math.PI/180);return((s%360)+360)%360;}
+var ST=[{mo:1,lon:315,am:2,ad:4},{mo:2,lon:345,am:3,ad:6},{mo:3,lon:15,am:4,ad:5},{mo:4,lon:45,am:5,ad:6},{mo:5,lon:75,am:6,ad:6},{mo:6,lon:105,am:7,ad:7},{mo:7,lon:135,am:8,ad:7},{mo:8,lon:165,am:9,ad:8},{mo:9,lon:195,am:10,ad:8},{mo:10,lon:225,am:11,ad:7},{mo:11,lon:255,am:12,ad:7},{mo:12,lon:285,am:1,ad:6}];
+function aD(a,b){var d=b-a;while(d>180)d-=360;while(d<-180)d+=360;return d;}
+function fS(yr,s){var ay=yr;if(s.am===1&&s.mo===12)ay=yr+1;var j=toJDN(ay,s.am,s.ad)-5;for(var i=0;i<25;i++){var l1=sunL(j-.875),l2=sunL(j+.125);if(aD(s.lon,l1)<=0&&aD(s.lon,l2)>0)return j;j++;}return toJDN(ay,s.am,s.ad);}
+
+function fM(y,m,d){var bj=toJDN(y,m,d),all=[];for(var yy=y-1;yy<=y+1;yy++)for(var i=0;i<ST.length;i++)all.push({mo:ST[i].mo,jdn:fS(yy,ST[i])});all.sort(function(a,b){return a.jdn-b.jdn;});var p=null,n=null;for(var i=0;i<all.length-1;i++){if(bj>=all[i].jdn&&bj<all[i+1].jdn){p=all[i];n=all[i+1];break;}}if(!p)return null;var lc=fS(y,ST[0]);return{p:p,n:n,df:bj-p.jdn+1,dt:n.jdn-bj,cy:bj>=lc?y:y-1,lm:p.mo};}
+function dK(y,m,d){return K60[((toJDN(y,m,d)+49)%60+60)%60];}
+function yK(c){return K60[((c-4)%60+60)%60];}
+function mK(ysi,lm){var f=((ysi%5)*2+2)%10,ms=(f+(lm-1))%10,mb=(lm+1)%12;for(var i=0;i<60;i++)if(K60[i].si===ms&&K60[i].bi===mb)return K60[i];return K60[0];}
+
+// ====== 位相法 ENGINE ======
+var SHIGOU=[['子','丑'],['寅','亥'],['卯','戌'],['辰','酉'],['巳','申'],['午','未']];
+var SANGOU=[{b:['申','子','辰'],e:'水'},{b:['亥','卯','未'],e:'木'},{b:['寅','午','戌'],e:'火'},{b:['巳','酉','丑'],e:'金'}];
+var HOUSANMI=[{b:['寅','卯','辰'],e:'東方木'},{b:['巳','午','未'],e:'南方火'},{b:['申','酉','戌'],e:'西方金'},{b:['亥','子','丑'],e:'北方水'}];
+var TAICHU=[['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
+var HAHOU=[['子','酉'],['丑','辰'],['寅','亥'],['卯','午'],['巳','申'],['未','戌']];
+var GAIHOU=[['子','未'],['丑','午'],['寅','巳'],['卯','辰'],['申','亥'],['酉','戌']];
+var KEI_MUON=[['寅','巳'],['巳','申'],['申','寅']];
+var KEI_JISEI=[['丑','戌'],['戌','未'],['未','丑']];
+var KEI_BUREI=[['子','卯'],['卯','子']];
+var JIKEI=['辰','午','酉','亥'];
+var KANGOU_STEMS=[[0,5],[1,6],[2,7],[3,8],[4,9]];
+
+function brPair(a,b){return(a===arguments[0]&&b===arguments[1])||(a===arguments[1]&&b===arguments[0]);}
+function hasPair(list,a,b){for(var i=0;i<list.length;i++){if((list[i][0]===a&&list[i][1]===b)||(list[i][0]===b&&list[i][1]===a))return true;}return false;}
+
+function calcIsouhou(pillars){
+  // pillars = [{name:'日柱',stem,branch,si,bi,num}, ...]  (日,月,年)
+  var results=[];
+  var brs=[pillars[0].branch,pillars[1].branch,pillars[2].branch];
+  var names=[pillars[0].name,pillars[1].name,pillars[2].name];
+
+  // 三合会局 (3 branches)
+  for(var sg=0;sg<SANGOU.length;sg++){
+    var sb=SANGOU[sg].b;
+    if(brs.indexOf(sb[0])>=0&&brs.indexOf(sb[1])>=0&&brs.indexOf(sb[2])>=0){
+      results.push({type:'合',name:'三合会局',detail:sb.join('')+'（'+SANGOU[sg].e+'局）',color:'#2563eb'});
+    }
+  }
+
+  // 方三位 (3 branches)
+  for(var h=0;h<HOUSANMI.length;h++){
+    var hb=HOUSANMI[h].b;
+    if(brs.indexOf(hb[0])>=0&&brs.indexOf(hb[1])>=0&&brs.indexOf(hb[2])>=0){
+      results.push({type:'合',name:'方三位',detail:hb.join('')+'（'+HOUSANMI[h].e+'局）',color:'#2563eb'});
+    }
+  }
+
+  // Pairwise checks
+  var pairs=[[0,1,'日支↔月支'],[1,2,'月支↔年支'],[0,2,'日支↔年支']];
+  for(var pi=0;pi<pairs.length;pi++){
+    var ia=pairs[pi][0],ib=pairs[pi][1],lbl=pairs[pi][2];
+    var ba=brs[ia],bb=brs[ib];
+    var pa=pillars[ia],pb=pillars[ib];
+
+    // 支合
+    if(hasPair(SHIGOU,ba,bb)) results.push({type:'合',name:'支合',detail:lbl+'（'+ba+bb+'）',color:'#2563eb'});
+
+    // 半会
+    for(var sg=0;sg<SANGOU.length;sg++){
+      var sb=SANGOU[sg].b;
+      if(ba !== bb && sb.indexOf(ba)>=0 && sb.indexOf(bb)>=0){
+        // Check not already 三合会局
+        var third=null;for(var si=0;si<sb.length;si++)if(sb[si]!==ba&&sb[si]!==bb)third=sb[si];
+        if(brs.indexOf(third)<0) results.push({type:'合',name:'半会',detail:lbl+'（'+ba+bb+'→'+SANGOU[sg].e+'局）',color:'#2563eb'});
+      }
+    }
+
+    // 大半会: same stem + branches in 半会
+    if(pa.si===pb.si){
+      for(var sg=0;sg<SANGOU.length;sg++){
+        var sb=SANGOU[sg].b;
+        if(ba !== bb && sb.indexOf(ba)>=0 && sb.indexOf(bb)>=0){
+          results.push({type:'合',name:'大半会',detail:lbl+'（'+pa.stem+ba+'↔'+pb.stem+bb+'）',color:'#0891b2'});
+        }
+      }
+    }
+
+    // 律音: same kanshi
+    if(pa.num===pb.num) results.push({type:'合',name:'律音',detail:lbl+'（'+pa.name+'）',color:'#0891b2'});
+
+    // 天剋地冲 (check first)
+    var hasTk=false,hasNt=false;
+    if(hasPair(TAICHU,ba,bb)){
+      var deA=STEM_EL[STEMS[pa.si]],deB=STEM_EL[STEMS[pb.si]];
+      if(OVER[deA]===deB||OVER[deB]===deA){hasTk=true;results.push({type:'散',name:'天剋地冲',detail:lbl+'（'+pa.name+'↔'+pb.name+'）',color:'#991b1b'});}
+    }
+    // 納音: same stem + 対冲
+    if(pa.si===pb.si&&hasPair(TAICHU,ba,bb)){hasNt=true;results.push({type:'散',name:'納音',detail:lbl+'（'+pa.name+'↔'+pb.name+'）',color:'#dc2626'});}
+    // 対冲 (skip if 天剋地冲 or 納音)
+    if(!hasTk&&!hasNt&&hasPair(TAICHU,ba,bb)) results.push({type:'散',name:'対冲',detail:lbl+'（'+ba+bb+'）',color:'#dc2626'});
+
+    // 破法
+    if(hasPair(HAHOU,ba,bb)) results.push({type:'散',name:'破',detail:lbl+'（'+ba+bb+'）',color:'#ea580c'});
+
+    // 害法
+    if(hasPair(GAIHOU,ba,bb)) results.push({type:'散',name:'害',detail:lbl+'（'+ba+bb+'）',color:'#ea580c'});
+
+    // 刑法
+    if(hasPair(KEI_MUON,ba,bb)) results.push({type:'散',name:'生刑',detail:lbl+'（'+ba+bb+'）',color:'#ea580c'});
+    if(hasPair(KEI_JISEI,ba,bb)) results.push({type:'散',name:'庫刑',detail:lbl+'（'+ba+bb+'）',color:'#ea580c'});
+    if(hasPair(KEI_BUREI,ba,bb)) results.push({type:'散',name:'旺刑',detail:lbl+'（'+ba+bb+'）',color:'#ea580c'});
+  }
+
+  // 自刑 (same branch appears twice, and it's one of 辰午酉亥)
+  for(var pi=0;pi<pairs.length;pi++){
+    var ia=pairs[pi][0],ib=pairs[pi][1],lbl=pairs[pi][2];
+    if(brs[ia]===brs[ib]&&JIKEI.indexOf(brs[ia])>=0){
+      results.push({type:'散',name:'自刑',detail:lbl+'（'+brs[ia]+brs[ib]+'）',color:'#ea580c'});
+    }
+  }
+
+  return results;
+}
+
+// 運勢の干支 vs 宿命三柱の位相法
+function isouVsNatal(fk, natalPillars){
+  var res=[];
+  var pNames=['日','月','年'];
+  var nBrs=[natalPillars[0].branch,natalPillars[1].branch,natalPillars[2].branch];
+  for(var pi=0;pi<natalPillars.length;pi++){
+    var np=natalPillars[pi];
+    var ba=fk.branch, bb=np.branch;
+    var lbl=pNames[pi];
+    var hasTenkoku=false, hasDaihankai=false;
+    // 干合
+    var isKg=false;
+    for(var ki=0;ki<KANGOU_STEMS.length;ki++){
+      if((fk.si===KANGOU_STEMS[ki][0]&&np.si===KANGOU_STEMS[ki][1])||(fk.si===KANGOU_STEMS[ki][1]&&np.si===KANGOU_STEMS[ki][0])){isKg=true;break;}
+    }
+    if(isKg) res.push({t:'合',n:'干合',l:lbl,c:'#2563eb'});
+    // 支合
+    if(hasPair(SHIGOU,ba,bb)) res.push({t:'合',n:'支合',l:lbl,c:'#2563eb'});
+    // 大半会 (skip if same branch)
+    if(ba!==bb&&fk.si===np.si){
+      for(var sg=0;sg<SANGOU.length;sg++){
+        if(SANGOU[sg].b.indexOf(ba)>=0&&SANGOU[sg].b.indexOf(bb)>=0){hasDaihankai=true;res.push({t:'合',n:'大半会',l:lbl,c:'#0891b2'});}
+      }
+    }
+    // 半会 (skip if same branch or if 大半会 exists)
+    if(ba!==bb&&!hasDaihankai){
+      for(var sg=0;sg<SANGOU.length;sg++){
+        var sb=SANGOU[sg].b;
+        if(sb.indexOf(ba)>=0&&sb.indexOf(bb)>=0){
+          var third=null;for(var si=0;si<sb.length;si++)if(sb[si]!==ba&&sb[si]!==bb)third=sb[si];
+          var allBrs=[ba];for(var ni=0;ni<nBrs.length;ni++)allBrs.push(nBrs[ni]);
+          if(allBrs.indexOf(third)<0) res.push({t:'合',n:'半会',l:lbl,c:'#2563eb'});
+        }
+      }
+    }
+    // 律音
+    if(fk.num===np.num) res.push({t:'合',n:'律音',l:lbl,c:'#0891b2'});
+    // 天剋地冲 (check first)
+    var hasNattin=false;
+    if(hasPair(TAICHU,ba,bb)){
+      var eA=STEM_EL[STEMS[fk.si]],eB=STEM_EL[STEMS[np.si]];
+      if(OVER[eA]===eB||OVER[eB]===eA){hasTenkoku=true;res.push({t:'散',n:'天剋地冲',l:lbl,c:'#991b1b'});}
+    }
+    // 納音: same stem + 対冲
+    if(fk.si===np.si&&hasPair(TAICHU,ba,bb)){hasNattin=true;res.push({t:'散',n:'納音',l:lbl,c:'#dc2626'});}
+    // 対冲 (skip if 天剋地冲 or 納音 exists)
+    if(!hasTenkoku&&!hasNattin&&hasPair(TAICHU,ba,bb)) res.push({t:'散',n:'対冲',l:lbl,c:'#dc2626'});
+    // 害
+    if(hasPair(GAIHOU,ba,bb)) res.push({t:'散',n:'害',l:lbl,c:'#ea580c'});
+    // 生刑
+    if(hasPair(KEI_MUON,ba,bb)) res.push({t:'散',n:'生刑',l:lbl,c:'#ea580c'});
+    // 庫刑
+    if(hasPair(KEI_JISEI,ba,bb)) res.push({t:'散',n:'庫刑',l:lbl,c:'#ea580c'});
+    // 旺刑
+    if(hasPair(KEI_BUREI,ba,bb)) res.push({t:'散',n:'旺刑',l:lbl,c:'#ea580c'});
+    // 自刑
+    if(ba===bb&&JIKEI.indexOf(ba)>=0) res.push({t:'散',n:'自刑',l:lbl,c:'#ea580c'});
+  }
+  // 三合会局
+  for(var sg=0;sg<SANGOU.length;sg++){
+    var sb=SANGOU[sg].b;if(sb.indexOf(fk.branch)<0)continue;
+    var matched=[];
+    for(var ni=0;ni<nBrs.length;ni++){if(sb.indexOf(nBrs[ni])>=0&&nBrs[ni]!==fk.branch)matched.push(pNames[ni]);}
+    var allPresent=true;
+    for(var si=0;si<sb.length;si++){var found=(sb[si]===fk.branch);if(!found){for(var ni=0;ni<nBrs.length;ni++){if(nBrs[ni]===sb[si]){found=true;break;}}}if(!found){allPresent=false;break;}}
+    if(allPresent&&matched.length>=2) res.push({t:'合',n:'三合',l:matched.join('+'),c:'#2563eb'});
+  }
+  return res;
+}
+function isouTags(fk,np){
+  var items=isouVsNatal(fk,np);
+  if(items.length===0) return '';
+  var groups={};
+  for(var i=0;i<items.length;i++){
+    var key=items[i].l;
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(items[i]);
+  }
+  var h='';
+  for(var key in groups){
+    var g=groups[key];
+    h+='<div style="white-space:nowrap;margin-bottom:2px"><span style="font-size:9px;color:#888;font-weight:700">'+key+'柱：</span>';
+    for(var j=0;j<g.length;j++){
+      h+='<span style="display:inline-block;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:700;margin:0 1px;color:#fff;background:'+g[j].c+'">'+g[j].n+'</span>';
+    }
+    h+='</div>';
+  }
+  return h;
+}
+
+function calc(year,month,day,gender){
+  var info=fM(year,month,day);if(!info)return null;
+  var dk=dK(year,month,day),yk=yK(info.cy),mk=mK(yk.si,info.lm);
+  var tc=getTcName(dk.num),tcb=getTcBr(dk.num),df=info.df;
+  var yz=getZK(yk.branch,df),mz=getZK(mk.branch,df),dz=getZK(dk.branch,df);
+  var yzA=allZK(yk.branch),mzA=allZK(mk.branch),dzA=allZK(dk.branch);
+  var yzi=STEMS.indexOf(yz),mzi=STEMS.indexOf(mz),dzi=STEMS.indexOf(dz);
+  var north=tenS(dk.si,yk.si),west=tenS(dk.si,dzi),center=tenS(dk.si,mzi);
+  var east=tenS(dk.si,yzi),south=tenS(dk.si,mk.si),bansei=tenS(dk.si,KANGOU[yk.si]);
+  var ini=twS(dk.si,yk.bi),late=twS(dk.si,dk.bi),mid=twS(dk.si,mk.bi);
+  var yY=yk.si%2===0,fwd=(yY&&gender==="male")||(!yY&&gender==="female");
+  var dft=fwd?info.dt:(info.df-1),sa=Math.round(dft/3);if(sa===0)sa=1;if(sa>10)sa=10;
+  var tl=[];for(var i=0;i<10;i++){var off=fwd?i+1:-(i+1);var k=K60[((mk.num-1+off)%60+60)%60];tl.push({num:k.num,name:k.name,stem:k.stem,branch:k.branch,si:k.si,bi:k.bi,star:tenS(dk.si,k.si),fs:twS(dk.si,k.bi),a1:sa+i*10,a2:sa+i*10+9,isTc:tcb.indexOf(k.branch)>=0,isIjou:k.isIjou,jun:i+1});}
+  var ft=[];if(tcb.indexOf(yk.branch)>=0)ft.push("生年天中殺");if(tcb.indexOf(mk.branch)>=0)ft.push("生月天中殺");var yktcb=getTcBr(yk.num);if(yktcb.indexOf(dk.branch)>=0)ft.push("生日天中殺");if(dk.num===11||dk.num===12)ft.push("日座天中殺");if(dk.num===41||dk.num===42)ft.push("日居天中殺");
+  return{dk:dk,mk:mk,yk:yk,tc:tc,tcb:tcb,ft:ft,dz:dz,mz:mz,yz:yz,dzA:dzA,mzA:mzA,yzA:yzA,df:info.df,dt:info.dt,north:north,south:south,east:east,west:west,center:center,bansei:bansei,ini:ini,mid:mid,late:late,fwd:fwd,sa:sa,tl:tl};
+}
+
+// AIに渡す追加データ：年運100年分（生年〜生年+99年）
+function genNenun(r,birthYear){
+  var arr=[];
+  for(var i=0;i<100;i++){
+    var y=birthYear+i;
+    var yk2=yK(y);
+    arr.push({y:y,name:yk2.name,star:tenS(r.dk.si,yk2.si),fs:twS(r.dk.si,yk2.bi),isTc:r.tcb.indexOf(yk2.branch)>=0,isIjou:yk2.isIjou});
+  }
+  return arr;
+}
+
+// AIに渡す追加データ：月運2年分（今月の12ヶ月前〜11ヶ月後の24ヶ月）
+function genGetsuun(r){
+  var arr=[];
+  var now=new Date();
+  var y=now.getFullYear(),m=now.getMonth()+1-12;
+  while(m<=0){m+=12;y--;}
+  for(var i=0;i<24;i++){
+    var info=fM(y,m,15);
+    if(info){
+      var yk2=yK(info.cy),mk2=mK(yk2.si,info.lm);
+      arr.push({y:y,m:m,name:mk2.name,star:tenS(r.dk.si,mk2.si),fs:twS(r.dk.si,mk2.bi),isTc:r.tcb.indexOf(mk2.branch)>=0,isIjou:mk2.isIjou});
+    }
+    m++;if(m>12){m=1;y++;}
+  }
+  return arr;
+}
+
+// AIに渡す追加データ：日運3ヶ月分（本日の45日前〜44日後の90日）
+function genNichiun(r){
+  var arr=[];
+  var base=new Date();base.setHours(0,0,0,0);base.setDate(base.getDate()-45);
+  for(var i=0;i<90;i++){
+    var d=new Date(base.getTime()+i*86400000);
+    var y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();
+    var dk2=dK(y,m,day);
+    var dateStr=y+'-'+(m<10?'0':'')+m+'-'+(day<10?'0':'')+day;
+    arr.push({date:dateStr,name:dk2.name,star:tenS(r.dk.si,dk2.si),fs:twS(r.dk.si,dk2.bi),isTc:r.tcb.indexOf(dk2.branch)>=0,isIjou:dk2.isIjou});
+  }
+  return arr;
+}
+
+// 上記3つをまとめてAI送信用データを作る
+function buildAiRangeData(r,birthYear){
+  return{nenun:genNenun(r,birthYear),getsuun:genGetsuun(r),nichiun:genNichiun(r)};
+}
+
+// ====== UI RENDERER ======
+var SC={"貫索星":"#2d8a4e","石門星":"#2d8a4e","鳳閣星":"#c4342d","調舒星":"#c4342d","禄存星":"#b8860b","司禄星":"#b8860b","車騎星":"#7a7a7a","牽牛星":"#7a7a7a","龍高星":"#1a5fb4","玉堂星":"#1a5fb4"};
+function t12c(name){var e=T12E[name]||6;var ratio=(e-1)/11;var r=Math.round(167-ratio*91);var g=Math.round(139-ratio*110);var b=Math.round(250-ratio*101);return"rgb("+r+","+g+","+b+")";}
+// エネルギー1=rgb(167,139,250)薄紫 → 12=rgb(76,29,149)濃紫
+var JN=["初","二","三","四","五","六","七","八","九","十"];
+
+var state={year:1990,month:1,day:1,gender:"male",name:"",result:null};
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+// ====== アイコン（絵文字の代わりに使用する線画イラスト） ======
+var ICONS = {
+  home:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/><path d="M10 20v-5h4v5"/></svg>',
+  couple:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><circle cx="9" cy="8" r="3"/><circle cx="16" cy="9.2" r="2.5"/><path d="M3.3 20c.5-3.6 2.8-5.6 5.7-5.6s5.2 2 5.7 5.6"/><path d="M14.2 14.6c2 .4 3.4 1.9 4.6 5.4"/></svg>',
+  sparkle:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><circle cx="12" cy="12" r="8"/><path d="M12 8.3l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1 1-2.4Z"/></svg>',
+  note:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M6 3h9l4 4v14H6Z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg>',
+  person:'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><circle cx="12" cy="8" r="3.3"/><path d="M5 20c.8-4 3.4-6 7-6s6.2 2 7 6"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M4 20l.9-4L16 4.9 19.1 8 8 19.1 4 20Z"/><path d="M14 6.9 17.1 10"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M12 3.6 21.3 20H2.7Z"/><path d="M12 9.6v5"/><circle cx="12" cy="17.1" r="0.6" fill="currentColor" stroke="none"/></svg>'
+};
+
+function render(){
+  try{
+  var cy=new Date().getFullYear();
+  var dim=new Date(state.year,state.month,0).getDate();
+  if(state.day>dim)state.day=1;
+
+  var yOpts="";for(var y=cy;y>=1920;y--)yOpts+='<option value="'+y+'"'+(y===state.year?' selected':'')+'>'+y+'年</option>';
+  var mOpts="";for(var m=1;m<=12;m++)mOpts+='<option value="'+m+'"'+(m===state.month?' selected':'')+'>'+m+'月</option>';
+  var dOpts="";for(var d=1;d<=dim;d++)dOpts+='<option value="'+d+'"'+(d===state.day?' selected':'')+'>'+d+'日</option>';
+
+  var hasResult=!!state.result;
+  var html='<h1>いつきの算命学</h1>';
+
+  if(!hasResult){
+    // 結果なし：中央寄せフォーム
+    html+='<div style="max-width:480px;margin:0 auto">';
+    html+='<div class="form-box">';
+    html+='<div style="margin-bottom:12px"><span class="form-label">お名前</span>';
+    html+='<input type="text" id="inp-name" class="form-select" style="width:100%" placeholder="田中 太郎" value="'+esc(state.name)+'"></div>';
+    html+='<div class="form-row">';
+    html+='<div><span class="form-label">年</span><select class="form-select" id="sel-y" style="min-width:90px">'+yOpts+'</select></div>';
+    html+='<div><span class="form-label">月</span><select class="form-select" id="sel-m" style="min-width:65px">'+mOpts+'</select></div>';
+    html+='<div><span class="form-label">日</span><select class="form-select" id="sel-d" style="min-width:65px">'+dOpts+'</select></div>';
+    html+='<div><span class="form-label">性別</span><div class="gender-group">';
+    html+='<button class="gender-btn'+(state.gender==="male"?" active":"")+'" id="btn-m">男</button>';
+    html+='<button class="gender-btn'+(state.gender==="female"?" active":"")+'" id="btn-f">女</button>';
+    html+='</div></div></div>';
+    html+='<button class="calc-btn" id="btn-calc">命式を算出</button>';
+    html+='</div>';
+    html+='<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px">';
+    html+='<button class="topback-btn" onclick="showModeSelect()">'+ICONS.home+'トップに戻る</button>';
+    html+='<button class="topback-btn" onclick="showAisho()" style="border-color:#e8c98f;color:#b8860b">'+ICONS.couple+'相性占いへ</button>';
+    html+='</div>';
+    html+='</div>';
+  } else {
+    // 結果あり：コンパクトヘッダー
+    var gLabel=state.gender==='male'?'男':'女';
+    html+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.9);border-radius:14px;padding:12px 16px;margin-bottom:16px;max-width:960px;margin-left:auto;margin-right:auto;box-shadow:0 10px 26px -16px rgba(26,26,46,0.2)">';
+    html+='<span style="font-size:15px;font-weight:800">'+esc(state.name||'（名前なし）')+'</span>';
+    html+='<span style="font-size:13px;color:#666">'+state.year+'年'+state.month+'月'+state.day+'日（'+gLabel+'性）</span>';
+    html+='<div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">';
+    html+='<button class="topback-btn" onclick="showModeSelect()">'+ICONS.home+'トップ</button>';
+    html+='<button onclick="state.result=null;render()" style="padding:6px 14px;border-radius:20px;border:1px solid #ccc;background:#fff;font-size:12px;cursor:pointer;-webkit-appearance:none;">'+ICONS.edit+'変更</button>';
+    html+='<button onclick="showAisho()" style="padding:6px 14px;border-radius:20px;border:1px solid #b8860b;background:#fffbf0;color:#b8860b;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;">'+ICONS.couple+'相性</button>';
+    html+='</div>';
+    html+='</div>';
+  }
+
+  if(state.result){
+    var r=state.result;
+    html+='<div class="result-title">西暦'+state.year+'年'+state.month+'月'+state.day+'日生まれ（'+(state.gender==="male"?"男":"女")+'性）の命式</div>';
+
+    // 陰占 + 陽占 2列表示
+    html+='<div class="meishiki-2col">';
+    // 左列：陰占
+    html+='<div class="col-insen">';
+    html+='<div class="col-label">陰占</div>';
+    html+='<table class="insen-table"><thead><tr>';
+    html+='<th style="width:38px"> </th><th>日</th><th>月</th><th>年</th></tr></thead><tbody>';
+    html+='<tr><td class="lbl">No.</td><td>'+r.dk.num+'</td><td>'+r.mk.num+'</td><td>'+r.yk.num+'</td></tr>';
+    html+='<tr><td class="lbl">天干</td>';
+    html+='<td class="big'+(r.dk.isIjou?" ijou":"")+'">'+r.dk.stem+'</td>';
+    html+='<td class="big'+(r.mk.isIjou?" ijou":"")+'">'+r.mk.stem+'</td>';
+    html+='<td class="big'+(r.yk.isIjou?" ijou":"")+'">'+r.yk.stem+'</td></tr>';
+    html+='<tr><td class="lbl">地支</td>';
+    html+='<td class="big'+(r.dk.isIjou?" ijou":"")+'">'+r.dk.branch+'</td>';
+    html+='<td class="big'+(r.mk.isIjou?" ijou":"")+'">'+r.mk.branch+'</td>';
+    html+='<td class="big'+(r.yk.isIjou?" ijou":"")+'">'+r.yk.branch+'</td></tr>';
+    html+='<tr><td class="lbl">蔵干</td>';
+    html+='<td class="zk-main">'+r.dz+'</td><td class="zk-main">'+r.mz+'</td><td class="zk-main">'+r.yz+'</td></tr>';
+    html+='</tbody></table>';
+    if(r.dk.isIjou||r.mk.isIjou||r.yk.isIjou) html+='<p style="font-size:9px;color:#c4342d;margin-top:3px">※赤字＝異常干支</p>';
+    html+='<div style="margin-top:6px">';
+    html+='<span class="pill pill-dark" style="font-size:9px;padding:3px 7px;display:inline-block;margin-bottom:3px">天中殺：'+r.tc+'</span><br>';
+    if(r.ft.length>0)html+='<span class="pill pill-warn" style="font-size:9px;padding:3px 7px;display:inline-block">宿命TC：'+r.ft.join('・')+'</span>';
+    html+='</div>';
+    html+='</div>';
+    // 右列：陽占
+    html+='<div class="col-yousen">';
+    html+='<div class="col-label">陽占</div>';
+    var cells=[
+      {p:"先祖",s:r.bansei,t:"ten",bg:"#eef2ff"},
+      {p:"目上",s:r.north,t:"ten",bg:"#fce4ec"},
+      {p:"初年",s:r.ini,t:"twelve",bg:"#fff8e1"},
+      {p:"配偶",s:r.west,t:"ten",bg:"#fce4ec"},
+      {p:"中心",s:r.center,t:"ten",bg:"#fce4ec",hl:true},
+      {p:"社会",s:r.east,t:"ten",bg:"#fce4ec"},
+      {p:"晩年",s:r.late,t:"twelve",bg:"#fff8e1"},
+      {p:"目下",s:r.south,t:"ten",bg:"#fce4ec"},
+      {p:"中年",s:r.mid,t:"twelve",bg:"#fff8e1"}
+    ];
+    html+='<div class="jintaizu">';
+    for(var i=0;i<cells.length;i++){
+      var c=cells[i],isTen=c.t==="ten";
+      html+='<div class="jcell'+(c.hl?" hl":"")+'" style="background:'+c.bg+'">';
+      html+='<div class="jcell-pos '+(isTen?"ten":"twelve")+'">'+c.p+'</div>';
+      html+='<div class="jcell-star">'+c.s+'</div>';
+      if(!isTen)html+='<div class="jcell-energy">'+T12E[c.s]+'</div>';
+      html+='</div>';
+    }
+    html+='</div>';
+    var te=T12E[r.ini]+T12E[r.mid]+T12E[r.late];
+    html+='<p class="energy-total">身強：<b>'+te+'</b>点</p>';
+    html+='</div>';
+    html+='</div>'; // end meishiki-2col
+
+    // ====== 占いたいこと（AI自動鑑定） ======
+    html+='<div class="ai-fortune-box">';
+    html+='<div class="ai-fortune-title">'+ICONS.sparkle+'占いたいこと</div>';
+    html+='<p class="ai-fortune-sub">あなたの命式をもとに、やさしく鑑定します。</p>';
+    html+='<label class="ai-fortune-label" for="aiConsultation">気になっていること・知りたいことを教えてください</label>';
+    html+='<textarea id="aiConsultation" class="ai-fortune-textarea" placeholder="例：今後の仕事運と転職のタイミングについて詳しく知りたい、など"></textarea>';
+    html+='<button class="ai-fortune-btn" id="aiFortuneBtn" onclick="startAiFortune()">鑑定をはじめる</button>';
+    html+='<div class="ai-result-box" id="aiResultArea" style="display:none">';
+    html+='<div class="ai-result-title">'+ICONS.note+'鑑定結果</div>';
+    html+='<div class="ai-result-content" id="aiFortuneResult"></div>';
+    html+='<button class="ai-copy-btn" id="copyAiResultBtn" onclick="copyAiResult()">結果をコピーする</button>';
+    html+='</div>';
+    html+='</div>';
+  }
+  document.getElementById("main-page").innerHTML=html;
+  bind();
+  }catch(e){
+    document.getElementById("main-page").innerHTML='<h1>いつきの算命学</h1><p style="color:red;padding:20px">表示エラー: '+e.message+'<br>お手数ですがキャッシュをクリアして再読み込みしてください。</p>';
+    console.error(e);
+  }
+}
+
+function bind(){
+  var sy=document.getElementById("sel-y"),sm=document.getElementById("sel-m"),sd=document.getElementById("sel-d");
+  var bm=document.getElementById("btn-m"),bf=document.getElementById("btn-f"),bc=document.getElementById("btn-calc");
+  var ni=document.getElementById("inp-name");
+  if(ni)ni.oninput=function(){state.name=this.value;};
+  if(sy)sy.onchange=function(){state.year=+this.value;state.result=null;render();};
+  if(sm)sm.onchange=function(){state.month=+this.value;state.result=null;render();};
+  if(sd)sd.onchange=function(){state.day=+this.value;state.result=null;render();};
+  if(bm)bm.onclick=function(){state.gender="male";state.result=null;render();};
+  if(bf)bf.onclick=function(){state.gender="female";state.result=null;render();};
+  if(bc)bc.onclick=function(){
+    try{
+      state.result=calc(state.year,state.month,state.day,state.gender);
+      render();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }catch(e){
+      alert('計算エラー: '+e.message);
+      console.error(e);
+    }
+  };
+}
+
+function toggleSec(id,btn){
+  var el=document.getElementById(id);
+  var arrow=btn.querySelector('.arrow');
+  if(el.classList.contains('open')){el.classList.remove('open');arrow.classList.remove('open');}
+  else{el.classList.add('open');arrow.classList.add('open');}
+}
+
+function meishikiText(name,year,month,day,gender,r){
+  var g=gender==='male'?'男性':'女性';
+  var t='';
+  if(name)t+='【'+name+'】\n';
+  t+='生年月日：'+year+'年'+month+'月'+day+'日（'+g+'）\n';
+  t+='\n';
+  t+='【陰占】\n';
+  t+='日柱：'+r.dk.name+(r.dk.isIjou?' ※異常干支':'')+'\n';
+  t+='月柱：'+r.mk.name+(r.mk.isIjou?' ※異常干支':'')+'\n';
+  t+='年柱：'+r.yk.name+(r.yk.isIjou?' ※異常干支':'')+'\n';
+  t+='天中殺：'+r.tc+'\n';
+  if(r.ft&&r.ft.length>0) t+='宿命天中殺：'+r.ft.join('・')+'\n';
+  t+='\n';
+  t+='【陽占】\n';
+  t+='北（目上）：'+r.north+'　東（社会）：'+r.east+'\n';
+  t+='西（配偶者）：'+r.west+'　中央：'+r.center+'　南（目下）：'+r.south+'\n';
+  t+='初年期：'+r.ini+'　中年期：'+r.mid+'　晩年期：'+r.late+'\n';
+  return t;
+}
+
+function doCopy(text,btnId,defaultLabel){
+  var btnEl=document.getElementById(btnId);
+  if(!btnEl)return;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      btnEl.textContent='✓ コピーしました';btnEl.classList.add('copied');
+      setTimeout(function(){btnEl.textContent=defaultLabel;btnEl.classList.remove('copied');},2000);
+    });
+  }else{
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    btnEl.textContent='✓ コピーしました';btnEl.classList.add('copied');
+    setTimeout(function(){btnEl.textContent=defaultLabel;btnEl.classList.remove('copied');},2000);
+  }
+}
+
+// ====== AI自動鑑定 ======
+// AI鑑定APIを呼ぶ共通処理。サーバー側が「混雑中」と判定したエラー(retryable)のときだけ、
+// 少し待ってから自動で1回だけ再試行する。
+function fetchAiFortune(body){
+  return fetch('/api/ai-fortune',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  }).then(function(res){
+    return res.json().catch(function(){
+      throw new Error('サーバーからの応答を読み取れませんでした（status '+res.status+'）');
+    }).then(function(data){
+      if(!res.ok || data.error){
+        var err=new Error(data.error || ('鑑定中にエラーが発生しました（status '+res.status+'）'));
+        err.retryable=!!data.retryable;
+        throw err;
+      }
+      return data;
+    });
+  });
+}
+function fetchAiFortuneWithRetry(body, onRetry){
+  return fetchAiFortune(body).catch(function(e){
+    if(!e.retryable) throw e;
+    if(onRetry) onRetry();
+    return new Promise(function(resolve){ setTimeout(resolve,2500); }).then(function(){
+      return fetchAiFortune(body);
+    });
+  });
+}
+
+function startAiFortune(){
+  if(!state.result){
+    alert('まずは生年月日を入力して、命式を計算してください。');
+    return;
+  }
+  var consultation=(document.getElementById('aiConsultation').value||'').trim();
+  var btn=document.getElementById('aiFortuneBtn');
+  var resultArea=document.getElementById('aiResultArea');
+  var resultBox=document.getElementById('aiFortuneResult');
+
+  btn.disabled=true;
+  btn.textContent='算命学テキストを読み込み鑑定中（約30秒）...';
+  resultArea.style.display='block';
+  resultBox.textContent='いつきが、あなたの命式にじっくりと向き合っています。心を込めて鑑定書を書いておりますので、もう少しだけ、ゆったりとお待ちくださいね…';
+
+  fetchAiFortuneWithRetry({
+    meishiki: state.result,
+    rangeData: buildAiRangeData(state.result, state.year),
+    name: state.name,
+    birthDate: state.year+'-'+(state.month<10?'0':'')+state.month+'-'+(state.day<10?'0':'')+state.day,
+    activeTab: '基本',
+    consultation: consultation
+  }, function(){
+    resultBox.textContent='ただいまアクセスが集中しているようです。少し時間をおいて自動的にもう一度お試ししています…';
+  }).then(function(data){
+    resultBox.textContent=data.fortune;
+    btn.textContent='鑑定をはじめる';
+    btn.disabled=false;
+  }).catch(function(e){
+    resultBox.innerHTML='<span style="color:#c4342d">'+ICONS.warn+'エラーが発生しました：'+esc(e.message)+'</span>';
+    btn.textContent='鑑定をはじめる';
+    btn.disabled=false;
+  });
+}
+
+function copyAiResult(){
+  var resultBox=document.getElementById('aiFortuneResult');
+  if(!resultBox)return;
+  doCopy(resultBox.textContent,'copyAiResultBtn','結果をコピーする');
+}
+
+// ====== 相性占い ======
+var aishoState={
+  A:{year:1990,month:1,day:1,gender:"male",name:"",result:null},
+  B:{year:1990,month:1,day:1,gender:"male",result:null},
+  consultation:""
+};
+
+function showModeSelect(){
+  document.getElementById('mode-select').style.display='block';
+  document.getElementById('main-page').style.display='none';
+  document.getElementById('aisho-page').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showAisho(){
+  // メインページで結果が出ていたら依頼者に自動セット
+  if(state.result){
+    aishoState.A.name=state.name;
+    aishoState.A.year=state.year;
+    aishoState.A.month=state.month;
+    aishoState.A.day=state.day;
+    aishoState.A.gender=state.gender;
+    aishoState.A.result=state.result;
+  }
+  document.getElementById('mode-select').style.display='none';
+  document.getElementById('main-page').style.display='none';
+  document.getElementById('aisho-page').style.display='block';
+  renderAisho();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showMain(){
+  document.getElementById('mode-select').style.display='none';
+  document.getElementById('aisho-page').style.display='none';
+  document.getElementById('main-page').style.display='block';
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function unseiCards(r,birthY){
+  var now=new Date();
+  var tY=now.getFullYear(),tM=now.getMonth()+1,tD=now.getDate();
+  var todayK=dK(tY,tM,tD);
+  var nowMInfo=fM(tY,tM,tD);
+  var nowYK=nowMInfo?yK(nowMInfo.cy):yK(tY);
+  var nowMK=nowMInfo?mK(nowYK.si,nowMInfo.lm):mK(nowYK.si,1);
+  var age=tY-birthY;
+  var curTaiun=null;
+  for(var i=0;i<r.tl.length;i++){if(age>=r.tl[i].a1&&age<=r.tl[i].a2){curTaiun=r.tl[i];break;}}
+  function miniCard(bg,bc,label,kanshi,star,fs,isTc){
+    var h='<div style="background:'+bg+';border:1px solid '+bc+';border-radius:8px;padding:7px 8px;margin-bottom:4px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">';
+    h+='<span style="font-size:10px;font-weight:800">'+label+'</span>';
+    h+='<span style="font-size:11px;font-weight:700">'+kanshi;
+    if(isTc)h+='<span style="color:#c4342d;font-size:9px;margin-left:2px">TC</span>';
+    h+='</span></div>';
+    h+='<div style="display:flex;gap:4px;justify-content:center">';
+    h+='<span class="star-badge" style="font-size:10px;background:'+(SC[star]||"#555")+'">'+star+'</span>';
+    h+='<span class="star-badge" style="font-size:10px;background:'+t12c(fs)+'">'+fs+'</span>';
+    h+='</div></div>';
+    return h;
+  }
+  var h='<div style="margin-top:6px"><div class="col-label" style="font-size:10px">現在の運勢</div>';
+  if(curTaiun)h+=miniCard('#f3f0ff','#d5cff0','大運('+curTaiun.a1+'〜'+curTaiun.a2+'歳)',curTaiun.name,curTaiun.star,curTaiun.fs,curTaiun.isTc);
+  var yearStar=tenS(r.dk.si,nowYK.si),yearFS=twS(r.dk.si,nowYK.bi);
+  var monthStar=tenS(r.dk.si,nowMK.si),monthFS=twS(r.dk.si,nowMK.bi);
+  var todayStar=tenS(r.dk.si,todayK.si),todayFS=twS(r.dk.si,todayK.bi);
+  h+=miniCard('#fff8f0','#f0dcc4','年運('+tY+')',nowYK.name,yearStar,yearFS,r.tcb.indexOf(nowYK.branch)>=0);
+  h+=miniCard('#f0f8ff','#c4d8f0','月運('+tM+'月)',nowMK.name,monthStar,monthFS,r.tcb.indexOf(nowMK.branch)>=0);
+  h+=miniCard('#f0fff4','#c4f0d0','日運(本日)',todayK.name,todayStar,todayFS,r.tcb.indexOf(todayK.branch)>=0);
+  h+='</div>';
+  return h;
+}
+
+function aishoMeishikiBlock(r,birthY){
+  if(!r) return '<p style="color:#999;font-size:12px;text-align:center;padding:16px">未算出</p>';
+  var cells=[
+    {p:"先祖",s:r.bansei,t:"ten",bg:"#eef2ff"},
+    {p:"目上",s:r.north,t:"ten",bg:"#fce4ec"},
+    {p:"初年",s:r.ini,t:"twelve",bg:"#fff8e1"},
+    {p:"配偶",s:r.west,t:"ten",bg:"#fce4ec"},
+    {p:"中心",s:r.center,t:"ten",bg:"#fce4ec",hl:true},
+    {p:"社会",s:r.east,t:"ten",bg:"#fce4ec"},
+    {p:"晩年",s:r.late,t:"twelve",bg:"#fff8e1"},
+    {p:"目下",s:r.south,t:"ten",bg:"#fce4ec"},
+    {p:"中年",s:r.mid,t:"twelve",bg:"#fff8e1"}
+  ];
+  var h='';
+  h+='<div class="col-label" style="font-size:10px">陰占</div>';
+  h+='<table class="insen-table" style="font-size:10px;margin-bottom:4px"><thead><tr>';
+  h+='<th style="width:30px;font-size:9px"> </th><th style="font-size:9px">日</th><th style="font-size:9px">月</th><th style="font-size:9px">年</th></tr></thead><tbody>';
+  h+='<tr><td class="lbl" style="font-size:9px">天干</td>';
+  h+='<td class="big" style="font-size:14px'+(r.dk.isIjou?';color:#c4342d':'')+'">'+r.dk.stem+'</td>';
+  h+='<td class="big" style="font-size:14px'+(r.mk.isIjou?';color:#c4342d':'')+'">'+r.mk.stem+'</td>';
+  h+='<td class="big" style="font-size:14px'+(r.yk.isIjou?';color:#c4342d':'')+'">'+r.yk.stem+'</td></tr>';
+  h+='<tr><td class="lbl" style="font-size:9px">地支</td>';
+  h+='<td class="big" style="font-size:14px'+(r.dk.isIjou?';color:#c4342d':'')+'">'+r.dk.branch+'</td>';
+  h+='<td class="big" style="font-size:14px'+(r.mk.isIjou?';color:#c4342d':'')+'">'+r.mk.branch+'</td>';
+  h+='<td class="big" style="font-size:14px'+(r.yk.isIjou?';color:#c4342d':'')+'">'+r.yk.branch+'</td></tr>';
+  h+='<tr><td class="lbl" style="font-size:9px">蔵干</td>';
+  h+='<td style="font-size:11px;font-weight:700">'+r.dz+'</td><td style="font-size:11px;font-weight:700">'+r.mz+'</td><td style="font-size:11px;font-weight:700">'+r.yz+'</td></tr>';
+  h+='</tbody></table>';
+  h+='<div style="margin-bottom:6px"><span style="background:#1a1a2e;color:#fff;border-radius:4px;padding:2px 5px;font-size:9px;font-weight:700">TC：'+r.tc+'</span></div>';
+  h+='<div class="col-label" style="font-size:10px">陽占</div>';
+  h+='<div class="jintaizu" style="gap:2px">';
+  for(var i=0;i<cells.length;i++){
+    var c=cells[i];var isTen=c.t==="ten";
+    h+='<div class="jcell'+(c.hl?" hl":"")+'" style="background:'+c.bg+';padding:4px 2px;min-height:50px;gap:1px">';
+    h+='<div class="jcell-pos '+(isTen?"ten":"twelve")+'" style="font-size:8px">'+c.p+'</div>';
+    h+='<div class="jcell-star" style="font-size:10px;letter-spacing:0">'+c.s+'</div>';
+    if(!isTen)h+='<div style="font-size:8px;color:#7c3aed">'+T12E[c.s]+'</div>';
+    h+='</div>';
+  }
+  h+='</div>';
+  var te=T12E[r.ini]+T12E[r.mid]+T12E[r.late];
+  h+='<p style="text-align:center;font-size:9px;color:#888;margin:2px 0 4px">身強：<b>'+te+'</b>点</p>';
+  return h;
+}
+
+// 相性用：二人並列の運勢テーブル
+function aishoUnsei2col(A,B){
+  var now=new Date();
+  var tY=now.getFullYear(),tM=now.getMonth()+1,tD=now.getDate();
+  var rA=A.result,rB=B.result;
+
+  function starCell(r,kanshi){
+    if(!r||!kanshi) return '<td colspan="2" style="color:#ccc;font-size:10px;text-align:center">—</td>';
+    var ms=tenS(r.dk.si,kanshi.si),fs=twS(r.dk.si,kanshi.bi);
+    var isTc=r.tcb.indexOf(kanshi.branch)>=0;
+    return '<td style="font-size:10px;font-weight:700'+(isTc?';color:#c4342d':'')+'">'
+      +kanshi.name+(isTc?'<span style="font-size:8px">TC</span>':'')+'</td>'
+      +'<td><span class="star-badge" style="font-size:9px;background:'+(SC[ms]||"#555")+'">'+ms+'</span></td>';
+  }
+
+  var ANameLabel=esc(A.name||'依頼者');
+  var h='';
+
+  // ====== 大運 ======
+  h+='<button class="toggle-btn" onclick="toggleSec(\'as-taiun\',this)" style="margin-top:12px">大運一覧（初旬〜十旬）<span class="arrow">▼</span></button>';
+  h+='<div class="toggle-content" id="as-taiun"><div class="unsei-scroll">';
+  h+='<table class="unsei-table"><thead><tr>';
+  h+='<th>旬</th><th colspan="2">'+ANameLabel+'</th><th colspan="2">お相手</th></tr></thead><tbody>';
+  var ageA=tY-A.year, ageB=tY-B.year;
+  for(var i=0;i<10;i++){
+    var tA=rA.tl[i], tB=rB.tl[i];
+    var curA=ageA>=tA.a1&&ageA<=tA.a2, curB=ageB>=tB.a1&&ageB<=tB.a2;
+    var isCur=curA||curB;
+    h+='<tr'+(isCur?' class="this-row"':'')+'>';
+    h+='<td style="font-weight:800">'+JN[i]+'</td>';
+    h+='<td style="font-size:10px;color:#666">'+tA.a1+'〜'+tA.a2+'歳</td>';
+    h+='<td style="font-size:11px;font-weight:700'+(tA.isTc?';color:#c4342d':'')+'">'+tA.name+(curA?' ★':'')+'</td>';
+    h+='<td style="font-size:10px;color:#666">'+tB.a1+'〜'+tB.a2+'歳</td>';
+    h+='<td style="font-size:11px;font-weight:700'+(tB.isTc?';color:#c4342d':'')+'">'+tB.name+(curB?' ★':'')+'</td>';
+    h+='</tr>';
+  }
+  h+='</tbody></table></div></div>';
+
+  // ====== 年運 ======
+  h+='<button class="toggle-btn" onclick="toggleSec(\'as-nen\',this)">年運一覧<span class="arrow">▼</span></button>';
+  h+='<div class="toggle-content" id="as-nen"><div class="unsei-scroll">';
+  h+='<table class="unsei-table"><thead><tr><th>年</th><th colspan="2">'+ANameLabel+'</th><th colspan="2">お相手</th></tr></thead><tbody>';
+  for(var yr=tY-10;yr<=tY+10;yr++){
+    var nyk=yK(yr);
+    var isCurY=yr===tY;
+    h+='<tr'+(isCurY?' class="this-row"':'')+'>';
+    h+='<td style="font-weight:'+(isCurY?'800':'400')+'">'+yr+(isCurY?' ★':'')+'</td>';
+    h+=starCell(rA,nyk);
+    h+=starCell(rB,nyk);
+    h+='</tr>';
+  }
+  h+='</tbody></table></div></div>';
+
+  // ====== 月運 ======
+  h+='<button class="toggle-btn" onclick="toggleSec(\'as-getsu\',this)">月運一覧<span class="arrow">▼</span></button>';
+  h+='<div class="toggle-content" id="as-getsu"><div class="unsei-scroll">';
+  h+='<table class="unsei-table"><thead><tr><th>年月</th><th colspan="2">'+ANameLabel+'</th><th colspan="2">お相手</th></tr></thead><tbody>';
+  var mStart=new Date(tY,tM-7,15);
+  for(var mi=0;mi<12;mi++){
+    var md=new Date(mStart.getFullYear(),mStart.getMonth()+mi,15);
+    var my=md.getFullYear(),mm=md.getMonth()+1;
+    var minfo=fM(my,mm,15);
+    if(!minfo)continue;
+    var myk2=yK(minfo.cy);
+    var mmk2=mK(myk2.si,minfo.lm);
+    var isThisM=my===tY&&mm===tM;
+    h+='<tr'+(isThisM?' class="this-row"':'')+'>';
+    h+='<td style="font-weight:'+(isThisM?'800':'400')+'">'+my+'/'+(mm<10?'0'+mm:mm)+(isThisM?' ★':'')+'</td>';
+    h+=starCell(rA,mmk2);
+    h+=starCell(rB,mmk2);
+    h+='</tr>';
+  }
+  h+='</tbody></table></div></div>';
+
+  // ====== 日運 ======
+  h+='<button class="toggle-btn" onclick="toggleSec(\'as-nichi\',this)">日運一覧<span class="arrow">▼</span></button>';
+  h+='<div class="toggle-content" id="as-nichi"><div class="unsei-scroll" style="max-height:400px">';
+  h+='<table class="unsei-table"><thead><tr><th>日付</th><th colspan="2">'+ANameLabel+'</th><th colspan="2">お相手</th></tr></thead><tbody>';
+  var DAYS2=["日","月","火","水","木","金","土"];
+  var ds=toJDN(tY,tM,tD)-7,de=ds+45;
+  for(var dj=ds;dj<=de;dj++){
+    var dd=fromJDN(dj);
+    var ddk2=dK(dd.y,dd.m,dd.d);
+    var isToday2=dd.y===tY&&dd.m===tM&&dd.d===tD;
+    var dow2=new Date(dd.y,dd.m-1,dd.d).getDay();
+    var dowC=dow2===0?'color:#c4342d':(dow2===6?'color:#1a5fb4':'');
+    h+='<tr'+(isToday2?' class="today-row"':'')+'>';
+    h+='<td style="'+dowC+';font-weight:'+(isToday2?'800':'400')+'">'+dd.m+'/'+dd.d+' '+DAYS2[dow2]+(isToday2?' ★':'')+'</td>';
+    h+=starCell(rA,ddk2);
+    h+=starCell(rB,ddk2);
+    h+='</tr>';
+  }
+  h+='</tbody></table></div></div>';
+  return h;
+}
+
+function renderAisho(){
+  var cy=new Date().getFullYear();
+  var A=aishoState.A, B=aishoState.B;
+  function yopts(id,cur){var s='';for(var y=cy;y>=1920;y--)s+='<option value="'+y+'"'+(y===cur?' selected':'')+'>'+y+'年</option>';return'<select class="form-select" id="'+id+'" style="width:100%;font-size:12px;padding:5px;margin-bottom:4px">'+s+'</select>';}
+  function mopts(id,cur){var s='';for(var m=1;m<=12;m++)s+='<option value="'+m+'"'+(m===cur?' selected':'')+'>'+m+'月</option>';return'<select class="form-select" id="'+id+'" style="width:100%;font-size:12px;padding:5px;margin-bottom:4px">'+s+'</select>';}
+  function dopts(id,y,m,cur){var dim=new Date(y,m,0).getDate();var s='';for(var d=1;d<=dim;d++)s+='<option value="'+d+'"'+(d===cur?' selected':'')+'>'+d+'日</option>';return'<select class="form-select" id="'+id+'" style="width:100%;font-size:12px;padding:5px;margin-bottom:4px">'+s+'</select>';}
+  function gbtns(mid,fid,cur){return'<div class="gender-group"><button class="gender-btn'+(cur==="male"?" active":"")+'" id="'+mid+'" style="padding:5px 10px;font-size:11px">男</button><button class="gender-btn'+(cur==="female"?" active":"")+'" id="'+fid+'" style="padding:5px 10px;font-size:11px">女</button></div>';}
+
+  var html='<button class="topback-btn" onclick="showModeSelect()">'+ICONS.home+'トップに戻る</button>';
+  html+='<h1 style="margin:10px 0 2px">相性占い</h1>';
+  html+='<p class="sub">二人の命式を比較する</p>';
+  html+='<div class="aisho-forms">';
+  html+='<div class="aisho-form-col">';
+  html+='<div class="aisho-col-title">'+ICONS.person+'依頼者</div>';
+  html+='<span class="form-label">お名前</span>';
+  html+='<input type="text" id="a-name" class="form-select" style="width:100%;margin-bottom:6px;font-size:12px" placeholder="名前" value="'+esc(A.name||'')+'"><br>';
+  html+='<span class="form-label">生年</span>'+yopts('a-y',A.year);
+  html+='<span class="form-label">月</span>'+mopts('a-m',A.month);
+  html+='<span class="form-label">日</span>'+dopts('a-d',A.year,A.month,A.day);
+  html+='<span class="form-label" style="margin-top:2px">性別</span>'+gbtns('a-bm','a-bf',A.gender);
+  html+='</div>';
+  html+='<div class="aisho-form-col">';
+  html+='<div class="aisho-col-title" style="border-color:#c4342d;color:#c4342d">'+ICONS.couple+'お相手</div>';
+  html+='<span class="form-label">（名前なし）</span>';
+  html+='<div style="height:32px"></div>';
+  html+='<span class="form-label">生年</span>'+yopts('b-y',B.year);
+  html+='<span class="form-label">月</span>'+mopts('b-m',B.month);
+  html+='<span class="form-label">日</span>'+dopts('b-d',B.year,B.month,B.day);
+  html+='<span class="form-label" style="margin-top:2px">性別</span>'+gbtns('b-bm','b-bf',B.gender);
+  html+='</div>';
+  html+='</div>';
+  html+='<div class="ai-fortune-box" style="padding:16px">';
+  html+='<label class="ai-fortune-label" for="aishoConsultation">'+ICONS.sparkle+'占いたいこと（二人の関係について知りたいこと）</label>';
+  html+='<textarea id="aishoConsultation" class="ai-fortune-textarea" placeholder="例：将来の結婚や、お互いの相性について詳しく知りたい、など">'+esc(aishoState.consultation||'')+'</textarea>';
+  html+='<button class="calc-btn" id="a-calc">二人を占う</button>';
+  html+='</div>';
+  if(A.result&&B.result){
+    html+='<div class="ai-result-box" id="aishoAiResultArea" style="display:none">';
+    html+='<div class="ai-result-title">'+ICONS.note+'鑑定結果</div>';
+    html+='<div class="ai-result-content" id="aishoAiFortuneResult"></div>';
+    html+='<button class="ai-copy-btn" id="copyAishoAiResultBtn" onclick="copyAishoAiResult()">結果をコピーする</button>';
+    html+='</div>';
+    html+='<div class="aisho-results">';
+    html+='<div class="aisho-result-col">';
+    html+='<div style="font-size:11px;font-weight:800;text-align:center;padding:4px;background:#1a1a2e;color:#fff;border-radius:6px;margin-bottom:6px">'+ICONS.person+(A.name||'依頼者')+'</div>';
+    html+=aishoMeishikiBlock(A.result,A.year);
+    html+='</div>';
+    html+='<div class="aisho-result-col">';
+    html+='<div style="font-size:11px;font-weight:800;text-align:center;padding:4px;background:#c4342d;color:#fff;border-radius:6px;margin-bottom:6px">'+ICONS.couple+'お相手</div>';
+    html+=aishoMeishikiBlock(B.result,B.year);
+    html+='</div>';
+    html+='</div>';
+  }
+  document.getElementById('aisho-page').innerHTML=html;
+  bindAisho();
+}
+
+function bindAisho(){
+  var A=aishoState.A, B=aishoState.B;
+  function bindSel(id,obj,key){var el=document.getElementById(id);if(el)el.onchange=function(){obj[key]=+this.value;};}
+  var an=document.getElementById('a-name');if(an)an.oninput=function(){A.name=this.value;};
+  var acons=document.getElementById('aishoConsultation');if(acons)acons.oninput=function(){aishoState.consultation=this.value;};
+  bindSel('a-y',A,'year');bindSel('a-m',A,'month');bindSel('a-d',A,'day');
+  bindSel('b-y',B,'year');bindSel('b-m',B,'month');bindSel('b-d',B,'day');
+  var abm=document.getElementById('a-bm'),abf=document.getElementById('a-bf');
+  var bbm=document.getElementById('b-bm'),bbf=document.getElementById('b-bf');
+  if(abm)abm.onclick=function(){A.gender='male';renderAisho();};
+  if(abf)abf.onclick=function(){A.gender='female';renderAisho();};
+  if(bbm)bbm.onclick=function(){B.gender='male';renderAisho();};
+  if(bbf)bbf.onclick=function(){B.gender='female';renderAisho();};
+  var ac=document.getElementById('a-calc');
+  if(ac)ac.onclick=function(){
+    try{
+      A.result=calc(A.year,A.month,A.day,A.gender);
+      B.result=calc(B.year,B.month,B.day,B.gender);
+      renderAisho();
+      window.scrollTo({top:0,behavior:'smooth'});
+      startAishoAiFortune();
+    }catch(e){alert('計算エラー: '+e.message);}
+  };
+}
+
+function copyAisho(){
+  var A=aishoState.A, B=aishoState.B;
+  if(!A.result||!B.result)return;
+  var t=meishikiText(A.name||'依頼者',A.year,A.month,A.day,A.gender,A.result);
+  t+='\n---\n\n';
+  t+=meishikiText('お相手',B.year,B.month,B.day,B.gender,B.result);
+  doCopy(t,'aisho-copy-btn','相性命式をコピー');
+}
+
+function startAishoAiFortune(){
+  var A=aishoState.A, B=aishoState.B;
+  if(!A.result||!B.result) return;
+  var consultation=aishoState.consultation||'';
+  var btn=document.getElementById('a-calc');
+  var resultArea=document.getElementById('aishoAiResultArea');
+  var resultBox=document.getElementById('aishoAiFortuneResult');
+  if(!resultArea||!resultBox) return;
+
+  if(btn){btn.disabled=true;btn.textContent='算命学テキストを読み込み鑑定中（約30秒）...';}
+  resultArea.style.display='block';
+  resultBox.textContent='いつきが、お二人の命式にじっくりと向き合っています。心を込めて鑑定書を書いておりますので、もう少しだけ、ゆったりとお待ちくださいね…';
+
+  fetchAiFortuneWithRetry({
+    mode: 'aisho',
+    meishikiA: A.result,
+    meishikiB: B.result,
+    rangeDataA: buildAiRangeData(A.result, A.year),
+    rangeDataB: buildAiRangeData(B.result, B.year),
+    birthDateA: A.year+'-'+(A.month<10?'0':'')+A.month+'-'+(A.day<10?'0':'')+A.day,
+    birthDateB: B.year+'-'+(B.month<10?'0':'')+B.month+'-'+(B.day<10?'0':'')+B.day,
+    nameA: A.name||'依頼者',
+    nameB: 'お相手',
+    consultation: consultation
+  }, function(){
+    resultBox.textContent='ただいまアクセスが集中しているようです。少し時間をおいて自動的にもう一度お試ししています…';
+  }).then(function(data){
+    resultBox.textContent=data.fortune;
+    if(btn){btn.textContent='二人を占う';btn.disabled=false;}
+  }).catch(function(e){
+    resultBox.innerHTML='<span style="color:#c4342d">'+ICONS.warn+'エラーが発生しました：'+esc(e.message)+'</span>';
+    if(btn){btn.textContent='二人を占う';btn.disabled=false;}
+  });
+}
+
+function copyAishoAiResult(){
+  var resultBox=document.getElementById('aishoAiFortuneResult');
+  if(!resultBox)return;
+  doCopy(resultBox.textContent,'copyAishoAiResultBtn','結果をコピーする');
+}
+</script>
+<script>
+// Service Worker registration for offline support
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+    // Check for updates periodically
+    setInterval(function(){reg.update();},60*60*1000);
+  }).catch(function(e){console.log('SW registration failed:',e);});
+}
+</script>
+</body>
+</html>
