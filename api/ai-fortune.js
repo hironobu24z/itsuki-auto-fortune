@@ -1,5 +1,5 @@
 // いつきの算命学 - AI自動鑑定 Vercel Serverless Function（ストリーミング版）
-const MODEL = 'gemini-2.0-flash';
+const MODEL = 'gemini-3.5-flash';
 
 const SYSTEM_INSTRUCTION = `
 あなたはプロの算命学鑑定師「いつき」です。
