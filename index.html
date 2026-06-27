@@ -859,17 +859,6 @@ function fetchAiFortune(body){
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)
-  }).then(function(res){
-    return res.json().catch(function(){
-      throw new Error('サーバーからの応答を読み取れませんでした（status '+res.status+'）');
-    }).then(function(data){
-      if(!res.ok || data.error){
-        var err=new Error(data.error || ('鑑定中にエラーが発生しました（status '+res.status+'）'));
-        err.retryable=!!data.retryable;
-        throw err;
-      }
-      return data;
-    });
   });
 }
 function fetchAiFortuneWithRetry(body, onRetry){
