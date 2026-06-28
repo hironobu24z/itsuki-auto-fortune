@@ -1,6 +1,4 @@
-// いつきの算命学 - AI自動鑑定 Vercel Serverless Function（シンプル版）
-// データ量を最小限に絞り、安定動作を優先したバージョン。
-// 事前にVercelの管理画面で環境変数 GEMINI_API_KEY を設定しておくこと。
+export const config = { runtime: "edge" };
 
 const MODEL = 'gemini-3.5-flash';
 
@@ -40,120 +38,82 @@ function getTodayInfoJP() {
   return `本日は${formatter.format(now)}です。時間表現は必ずこの日付を基準にしてください。`;
 }
 
-function buildPrompt(requestData) {
-  const isAisho = !!(requestData.meishikiA && requestData.meishikiB);
-  const todayInfo = getTodayInfoJP();
-
-  if (isAisho) {
-    return `＜現在の日時＞
-${todayInfo}
-
-【相性鑑定リクエスト】
-＜${requestData.nameA || '依頼者'}様の生年月日＞
-${requestData.birthDateA || '不明'}
-
-＜${requestData.nameA || '依頼者'}様の命式データ＞
-${JSON.stringify(requestData.meishikiA, null, 2)}
-
-＜${requestData.nameB || 'お相手'}様の生年月日＞
-${requestData.birthDateB || '不明'}
-
-＜${requestData.nameB || 'お相手'}様の命式データ＞
-${JSON.stringify(requestData.meishikiB, null, 2)}
-
-【お客様の占いたいこと】
-${requestData.consultation || '二人の相性と、これからの関係について詳しく教えてください。'}`;
+function buildPrompt(d) {
+  const today = getTodayInfoJP();
+  if (d.meishikiA && d.meishikiB) {
+    return `＜現在の日時＞\n${today}\n\n【相性鑑定リクエスト】\n＜${d.nameA||'依頼者'}様の生年月日＞\n${d.birthDateA||'不明'}\n\n＜${d.nameA||'依頼者'}様の命式データ＞\n${JSON.stringify(d.meishikiA, null, 2)}\n\n＜運勢データ＞\n${JSON.stringify(d.rangeDataA||{}, null, 2)}\n\n＜${d.nameB||'お相手'}様の生年月日＞\n${d.birthDateB||'不明'}\n\n＜${d.nameB||'お相手'}様の命式データ＞\n${JSON.stringify(d.meishikiB, null, 2)}\n\n＜運勢データ＞\n${JSON.stringify(d.rangeDataB||{}, null, 2)}\n\n【お客様の占いたいこと】\n${d.consultation||'二人の相性と、これからの関係について詳しく教えてください。'}`;
   }
-
-  return `＜現在の日時＞
-${todayInfo}
-
-【個人鑑定リクエスト】
-＜お客様のお名前＞
-${requestData.name || '（名前なし。「あなた」と語りかけてください）'}
-
-＜生年月日（西暦）＞
-${requestData.birthDate || '不明'}
-
-＜命式データ＞
-${JSON.stringify(requestData.meishiki, null, 2)}
-
-【お客様の占いたいこと】
-${requestData.consultation || '全体の運勢、これからのアドバイスについて詳しく教えてください。'}`;
+  return `＜現在の日時＞\n${today}\n\n【個人鑑定リクエスト】\n＜お客様のお名前＞\n${d.name||'（名前なし。「あなた」と語りかけてください）'}\n\n＜生年月日（西暦）＞\n${d.birthDate||'不明'}\n\n＜命式データ＞\n${JSON.stringify(d.meishiki, null, 2)}\n\n＜運勢データ＞\n${JSON.stringify(d.rangeData||{}, null, 2)}\n\n【お客様の占いたいこと】\n${d.consultation||'全体の運勢、これからのアドバイスについて詳しく教えてください。'}`;
 }
 
-function isOverloadedError(status, data) {
-  if (status === 503) return true;
-  const message = (data && data.error && data.error.message) || '';
-  return /overload|high demand|unavailable/i.test(message);
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function callGemini(apiKey, prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-      generationConfig: { temperature: 0.7 }
-    })
-  });
-  const data = await res.json();
-  return { res, data };
-}
-
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+export default async function handler(req) {
+  if (req.method === "OPTIONS") {
+    return new Response(null, {status: 200, headers: {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "POST, OPTIONS"}});
+  }
+  if (req.method !== "POST") return new Response(JSON.stringify({error: "Method Not Allowed"}), {status: 405});
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY が設定されていません' });
+  if (!apiKey) return new Response(JSON.stringify({error: "GEMINI_API_KEY未設定"}), {status: 500});
 
-  let requestData;
-  try {
-    requestData = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  } catch (e) {
-    return res.status(400).json({ error: 'リクエストの形式が正しくありません' });
-  }
+  let d;
+  try { d = await req.json(); }
+  catch (e) { return new Response(JSON.stringify({error: "リクエスト形式エラー"}), {status: 400}); }
 
-  const prompt = buildPrompt(requestData);
-  const delays = [3000, 6000];
-  let lastData, lastRes;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
+  const body = JSON.stringify({
+    contents: [{role: "user", parts: [{text: buildPrompt(d)}]}],
+    systemInstruction: {parts: [{text: SYSTEM_INSTRUCTION}]},
+    generationConfig: {temperature: 0.7}
+  });
 
-  try {
-    for (let attempt = 0; attempt <= delays.length; attempt++) {
-      const { res: geminiRes, data } = await callGemini(apiKey, prompt);
-      lastRes = geminiRes;
-      lastData = data;
+  const enc = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      let done = false;
 
-      if (geminiRes.ok) {
-        const fortune = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!fortune) return res.status(502).json({ error: 'AIから鑑定文を取得できませんでした。もう一度お試しください。' });
-        return res.status(200).json({ fortune });
+      // 45秒ごとにゼロ幅スペースを送るだけ。Geminiへのリクエストは一切リセットしない。
+      const keepAlive = setInterval(() => {
+        if (!done) controller.enqueue(enc.encode("\u200B"));
+      }, 45000);
+
+      // 即座に待機メッセージを送信
+      controller.enqueue(enc.encode("ただいま命式を拝見しております。資料を確認しながら鑑定書を作成しております。しばらくお待ちください...\n\n"));
+
+      // Geminiへのリクエストは1回だけ。リトライなし。回答が来るまでひたすら待つ。
+      try {
+        const geminiRes = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json"}, body});
+        if (!geminiRes.ok) {
+          const e = await geminiRes.json();
+          controller.enqueue(enc.encode(`エラー: ${e?.error?.message || "Gemini APIエラー"}`));
+          done = true; clearInterval(keepAlive); controller.close(); return;
+        }
+        const reader = geminiRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        while (true) {
+          const {done: rdone, value} = await reader.read();
+          if (rdone) break;
+          buf += decoder.decode(value, {stream: true});
+          const lines = buf.split("\n");
+          buf = lines.pop();
+          for (const line of lines) {
+            const t = line.trim();
+            if (!t.startsWith("data: ")) continue;
+            const json = t.slice(6).trim();
+            if (json === "[DONE]") continue;
+            try {
+              const chunk = JSON.parse(json);
+              const text = chunk?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+              if (text) controller.enqueue(enc.encode(text));
+            } catch(e) {}
+          }
+        }
+      } catch(e) {
+        controller.enqueue(enc.encode(`エラー: ${e.message}`));
       }
-
-      const overloaded = isOverloadedError(geminiRes.status, data);
-      if (!overloaded || attempt === delays.length) break;
-      await sleep(delays[attempt]);
+      done = true; clearInterval(keepAlive); controller.close();
     }
+  });
 
-    const message = (lastData && lastData.error && lastData.error.message) || `Gemini APIエラー（status ${lastRes.status}）`;
-    const overloaded = isOverloadedError(lastRes.status, lastData);
-    return res.status(502).json({
-      error: overloaded ? 'ただいまアクセスが集中しております。少し時間をおいてもう一度お試しください。' : message,
-      retryable: overloaded
-    });
-
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
-  }
-};
+  return new Response(stream, {status: 200, headers: {"Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache", "Access-Control-Allow-Origin": "*"}});
+}
