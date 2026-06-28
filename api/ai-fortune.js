@@ -110,15 +110,22 @@ export default async function handler(req) {
       // 即座に挨拶を送信してタイムアウトをリセット
       controller.enqueue(enc.encode("ただいま命式を拝見しております。少々お待ちください...\n\n"));
 
-      const geminiRes = await fetch(url, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body
-      });
-
-      if (!geminiRes.ok) {
+      let geminiRes;
+      for (let i = 0; i < 3; i++) {
+        geminiRes = await fetch(url, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body
+        });
+        if (geminiRes.ok) break;
         const e = await geminiRes.json();
-        controller.enqueue(enc.encode(`エラー: ${e?.error?.message || "Gemini APIエラー"}`));
+        const msg = e?.error?.message || "";
+        if (i < 2 && (geminiRes.status === 503 || geminiRes.status === 429 || msg.includes("high demand"))) {
+          controller.enqueue(enc.encode(`\n(混雑中のため${(i+1)*5}秒後に再試行します...)\n`));
+          await new Promise(r => setTimeout(r, (i+1) * 5000));
+          continue;
+        }
+        controller.enqueue(enc.encode(`エラー: ${msg || "Gemini APIエラー"}`));
         controller.close();
         return;
       }
