@@ -1,6 +1,6 @@
 export const config = { runtime: "edge" };
 
-const MODEL = 'gemini-3.1-pro-preview';
+const MODEL = 'gemini-3.1-flash-lite';
 
 const SANMEI_FILES = [
   "files/qcfj5kbgimka",
@@ -83,75 +83,78 @@ export default async function handler(req) {
   if (!apiKey) return new Response(JSON.stringify({error: "GEMINI_API_KEY未設定"}), {status: 500});
 
   let d;
-  try {
-    d = await req.json();
-  } catch (e) {
-    return new Response(JSON.stringify({error: "リクエスト形式エラー"}), {status: 400});
-  }
+  try { d = await req.json(); }
+  catch (e) { return new Response(JSON.stringify({error: "リクエスト形式エラー"}), {status: 400}); }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
-
   const body = JSON.stringify({
     contents: [{
       role: "user",
-      parts: [
-        ...buildFileParts(),
-        {text: buildPrompt(d)}
-      ]
+      parts: [...buildFileParts(), {text: buildPrompt(d)}]
     }],
     systemInstruction: {parts: [{text: SYSTEM_INSTRUCTION}]},
     generationConfig: {temperature: 0.7}
   });
 
+  const enc = new TextEncoder();
+
   const stream = new ReadableStream({
     async start(controller) {
-      const enc = new TextEncoder();
+      // KeepAlive: 45秒ごとに生存確認メッセージを送り続ける
+      let done = false;
+      const keepAlive = setInterval(() => {
+        if (!done) {
+          controller.enqueue(enc.encode("\u200B")); // ゼロ幅スペース（画面に見えない）
+        }
+      }, 45000);
 
-      // 即座に挨拶を送信してタイムアウトをリセット
-      controller.enqueue(enc.encode("ただいま命式を拝見しております。少々お待ちください...\n\n"));
+      // 最初のメッセージを即送信
+      controller.enqueue(enc.encode("ただいま命式を拝見しております。資料を確認しながら鑑定書を作成しております。しばらくお待ちください...\n\n"));
 
-      let geminiRes;
-      for (let i = 0; i < 3; i++) {
-        geminiRes = await fetch(url, {
+      try {
+        const geminiRes = await fetch(url, {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body
         });
-        if (geminiRes.ok) break;
-        const e = await geminiRes.json();
-        const msg = e?.error?.message || "";
-        if (i < 2 && (geminiRes.status === 503 || geminiRes.status === 429 || msg.includes("high demand"))) {
-          controller.enqueue(enc.encode(`\n(混雑中のため${(i+1)*5}秒後に再試行します...)\n`));
-          await new Promise(r => setTimeout(r, (i+1) * 5000));
-          continue;
+
+        if (!geminiRes.ok) {
+          const e = await geminiRes.json();
+          controller.enqueue(enc.encode(`エラー: ${e?.error?.message || "Gemini APIエラー"}`));
+          done = true;
+          clearInterval(keepAlive);
+          controller.close();
+          return;
         }
-        controller.enqueue(enc.encode(`エラー: ${msg || "Gemini APIエラー"}`));
-        controller.close();
-        return;
+
+        const reader = geminiRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+
+        while (true) {
+          const {done: rdone, value} = await reader.read();
+          if (rdone) break;
+          buf += decoder.decode(value, {stream: true});
+          const lines = buf.split("\n");
+          buf = lines.pop();
+          for (const line of lines) {
+            const t = line.trim();
+            if (!t.startsWith("data: ")) continue;
+            const json = t.slice(6).trim();
+            if (json === "[DONE]") continue;
+            try {
+              const chunk = JSON.parse(json);
+              const text = chunk?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+              if (text) controller.enqueue(enc.encode(text));
+            } catch(e) {}
+          }
+        }
+      } catch(e) {
+        controller.enqueue(enc.encode(`エラー: ${e.message}`));
       }
 
-      const reader = geminiRes.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = "";
-
-      while (true) {
-        const {done, value} = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, {stream: true});
-        const lines = buf.split("\n");
-        buf = lines.pop();
-        for (const line of lines) {
-          const t = line.trim();
-          if (!t.startsWith("data: ")) continue;
-          const json = t.slice(6).trim();
-          if (json === "[DONE]") continue;
-          try {
-            const chunk = JSON.parse(json);
-            const text = chunk?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-            if (text) controller.enqueue(enc.encode(text));
-          } catch(e) {}
-        }
-      }
+      done = true;
+      clearInterval(keepAlive);
       controller.close();
     }
   });
