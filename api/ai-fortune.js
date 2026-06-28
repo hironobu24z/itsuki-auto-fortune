@@ -1,3 +1,5 @@
+export const config = { runtime: "edge" };
+
 const MODEL = 'gemini-3.1-flash-lite';
 
 const SANMEI_FILES = [
@@ -62,7 +64,7 @@ function buildFileParts() {
   }));
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
