@@ -103,22 +103,30 @@ export default async function handler(req) {
     generationConfig: {temperature: 0.7}
   });
 
-  const geminiRes = await fetch(url, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body
-  });
-
-  if (!geminiRes.ok) {
-    const e = await geminiRes.json();
-    return new Response(JSON.stringify({error: e?.error?.message || "Gemini APIエラー"}), {status: 502});
-  }
-
   const stream = new ReadableStream({
     async start(controller) {
+      const enc = new TextEncoder();
+
+      // 即座に挨拶を送信してタイムアウトをリセット
+      controller.enqueue(enc.encode("ただいま命式を拝見しております。少々お待ちください...\n\n"));
+
+      const geminiRes = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body
+      });
+
+      if (!geminiRes.ok) {
+        const e = await geminiRes.json();
+        controller.enqueue(enc.encode(`エラー: ${e?.error?.message || "Gemini APIエラー"}`));
+        controller.close();
+        return;
+      }
+
       const reader = geminiRes.body.getReader();
       const decoder = new TextDecoder();
       let buf = "";
+
       while (true) {
         const {done, value} = await reader.read();
         if (done) break;
@@ -133,7 +141,7 @@ export default async function handler(req) {
           try {
             const chunk = JSON.parse(json);
             const text = chunk?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-            if (text) controller.enqueue(new TextEncoder().encode(text));
+            if (text) controller.enqueue(enc.encode(text));
           } catch(e) {}
         }
       }
