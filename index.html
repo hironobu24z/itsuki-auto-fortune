@@ -631,9 +631,32 @@ function genNichiun(r){
   return arr;
 }
 
-// 上記3つをまとめてAI送信用データを作る
+// 上記3つをまとめてAI送信用データを作る（最小限版：現在の大運1件・年運1年・月運1ヶ月・日運1日）
 function buildAiRangeData(r,birthYear){
-  return{nenun:genNenun(r,birthYear),getsuun:genGetsuun(r),nichiun:genNichiun(r)};
+  var now=new Date();
+  var thisYear=now.getFullYear();
+  var thisMonth=now.getMonth()+1;
+  var today=now.getFullYear()+'-'+(now.getMonth()+1<10?'0':''+(now.getMonth()+1))+'-'+(now.getDate()<10?'0':'')+now.getDate();
+
+  // 現在の大運1件
+  var age=thisYear-birthYear;
+  var curTaiun=null;
+  for(var i=0;i<r.tl.length;i++){if(age>=r.tl[i].a1&&age<=r.tl[i].a2){curTaiun=r.tl[i];break;}}
+
+  // 今年の年運1件
+  var yk2=yK(thisYear);
+  var nenun={y:thisYear,name:yk2.name,star:tenS(r.dk.si,yk2.si),fs:twS(r.dk.si,yk2.bi),isTc:r.tcb.indexOf(yk2.branch)>=0,isIjou:yk2.isIjou};
+
+  // 今月の月運1件
+  var minfo=fM(thisYear,thisMonth,15);
+  var getsuun=null;
+  if(minfo){var mk2=mK(yK(minfo.cy).si,minfo.lm);getsuun={y:thisYear,m:thisMonth,name:mk2.name,star:tenS(r.dk.si,mk2.si),fs:twS(r.dk.si,mk2.bi),isTc:r.tcb.indexOf(mk2.branch)>=0,isIjou:mk2.isIjou};}
+
+  // 今日の日運1件
+  var dk2=dK(now.getFullYear(),now.getMonth()+1,now.getDate());
+  var nichiun={date:today,name:dk2.name,star:tenS(r.dk.si,dk2.si),fs:twS(r.dk.si,dk2.bi),isTc:r.tcb.indexOf(dk2.branch)>=0,isIjou:dk2.isIjou};
+
+  return{taiun:curTaiun,nenun:nenun,getsuun:getsuun,nichiun:nichiun};
 }
 
 // ====== UI RENDERER ======
