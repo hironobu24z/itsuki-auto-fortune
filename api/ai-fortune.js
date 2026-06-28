@@ -1,6 +1,6 @@
 export const config = { runtime: "edge" };
 
-const MODEL = 'gemini-3.1-flash-lite';
+const MODEL = 'gemini-3.1-pro-preview';
 
 const SANMEI_FILES = [
   "files/qcfj5kbgimka",
