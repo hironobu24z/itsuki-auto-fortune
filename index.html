@@ -1265,8 +1265,7 @@ function startAishoAiFortune(){
     consultation: consultation
   }, function(){
     resultBox.textContent='ただいまアクセスが集中しているようです。少し時間をおいて自動的にもう一度お試ししています…';
-  }).then(function(data){
-    resultBox.textContent=txt;
+  }).then(function(){
     if(btn){btn.textContent='二人を占う';btn.disabled=false;}
   }).catch(function(e){
     resultBox.innerHTML='<span style="color:#c4342d">'+ICONS.warn+'エラーが発生しました：'+esc(e.message)+'</span>';
