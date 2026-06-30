@@ -1,6 +1,6 @@
 export const config = { runtime: "edge" };
 
-const MODEL = 'gemini-3.1-flash-lite';
+const MODEL = 'gemini-3-flash-preview';
 
 const SYSTEM_INSTRUCTION = `
 あなたはプロの算命学鑑定師「いつき」です。
