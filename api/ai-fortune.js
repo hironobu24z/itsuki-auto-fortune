@@ -77,7 +77,7 @@ export default async function handler(req) {
       }, 45000);
 
       // 即座に待機メッセージを送信
-      controller.enqueue(enc.encode("ただいま命式を拝見しております。資料を確認しながら鑑定書を作成しております。しばらくお待ちください...\n\n"));
+      controller.enqueue(enc.encode("__WAITING__ただいま命式を拝見しております。資料を確認しながら鑑定書を作成しております。しばらくお待ちください...__END_WAITING__"));
 
       // Geminiへのリクエストは1回だけ。リトライなし。回答が来るまでひたすら待つ。
       try {

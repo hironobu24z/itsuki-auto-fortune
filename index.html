@@ -1291,13 +1291,37 @@ async function startStream(url, options) {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let txt = '';
+  let waitingShown = false;
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     txt += decoder.decode(value, { stream: true });
-    if (resultBox) resultBox.textContent = txt;
+
+    // 待機メッセージのマーカーを検知して処理
+    if (txt.includes('__WAITING__') && txt.includes('__END_WAITING__')) {
+      const afterWaiting = txt.split('__END_WAITING__')[1] || '';
+      if (afterWaiting.trim() === '') {
+        // まだ鑑定文が来ていない：待機メッセージだけ表示
+        const waitMsg = txt.split('__WAITING__')[1].split('__END_WAITING__')[0];
+        if (resultBox) resultBox.textContent = waitMsg;
+        waitingShown = true;
+      } else {
+        // 鑑定文が来た：待機メッセージを消して鑑定文だけ表示
+        if (resultBox) resultBox.textContent = afterWaiting;
+      }
+    } else if (!txt.includes('__WAITING__')) {
+      if (resultBox) resultBox.textContent = txt;
+    }
   }
-  return { fortune: txt };
+
+  // 最終的なテキストからマーカーを除去
+  let finalTxt = txt;
+  if (finalTxt.includes('__END_WAITING__')) {
+    finalTxt = finalTxt.split('__END_WAITING__')[1] || finalTxt;
+  }
+  if (resultBox) resultBox.textContent = finalTxt;
+
+  return { fortune: finalTxt };
 }
 </script>
 </body>
