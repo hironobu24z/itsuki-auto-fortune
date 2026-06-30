@@ -877,19 +877,19 @@ function doCopy(text,btnId,defaultLabel){
 // ====== AI自動鑑定 ======
 // AI鑑定APIを呼ぶ共通処理。サーバー側が「混雑中」と判定したエラー(retryable)のときだけ、
 // 少し待ってから自動で1回だけ再試行する。
-function fetchAiFortune(body, targetId){
+function fetchAiFortune(body){
   return startStream('/api/ai-fortune',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)
-  }, targetId);
+  });
 }
-function fetchAiFortuneWithRetry(body, onRetry, targetId){
-  return fetchAiFortune(body, targetId).catch(function(e){
+function fetchAiFortuneWithRetry(body, onRetry){
+  return fetchAiFortune(body).catch(function(e){
     if(!e.retryable) throw e;
     if(onRetry) onRetry();
     return new Promise(function(resolve){ setTimeout(resolve,2500); }).then(function(){
-      return fetchAiFortune(body, targetId);
+      return fetchAiFortune(body);
     });
   });
 }
@@ -918,7 +918,7 @@ function startAiFortune(){
     consultation: consultation
   }, function(){
     resultBox.textContent='ただいまアクセスが集中しているようです。少し時間をおいて自動的にもう一度お試ししています…';
-  }, 'aiFortuneResult').then(function(data){
+  }).then(function(data){
     // ストリーミング済み
     btn.textContent='鑑定をはじめる';
     btn.disabled=false;
@@ -1265,7 +1265,7 @@ function startAishoAiFortune(){
     consultation: consultation
   }, function(){
     resultBox.textContent='ただいまアクセスが集中しているようです。少し時間をおいて自動的にもう一度お試ししています…';
-  }, 'aishoAiFortuneResult').then(function(){
+  }).then(function(){
     if(btn){btn.textContent='二人を占う';btn.disabled=false;}
   }).catch(function(e){
     resultBox.innerHTML='<span style="color:#c4342d">'+ICONS.warn+'エラーが発生しました：'+esc(e.message)+'</span>';
@@ -1280,8 +1280,8 @@ function copyAishoAiResult(){
 }
 </script>
 <script>
-async function startStream(url, options, targetId) {
-  const resultBox = document.getElementById(targetId || 'aiFortuneResult');
+async function startStream(url, options) {
+  const resultBox = document.getElementById('aiFortuneResult') || document.getElementById('aishoAiFortuneResult');
   const res = await fetch(url, options);
   if (!res.ok) {
     const text = await res.text();
