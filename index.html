@@ -309,6 +309,50 @@ h1 { text-align:center; font-family:var(--font-display); font-size:21px; font-we
 .mode-card-desc { font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin-bottom:14px; }
 .mode-card-cta { font-size:12px; font-weight:700; color:var(--gold); letter-spacing:1px; }
 .mode-card.is-aisho .mode-card-cta { color:var(--rose); }
+
+/* ===== タロット（tarot- 接頭辞のみ。既存ルールには触れない） ===== */
+.tarot-entry {
+  margin-top:16px; padding-top:14px; border-top:1px dashed var(--line); text-align:center;
+}
+.tarot-entry-note { font-size:12px; color:var(--ink-soft); margin-bottom:9px; }
+.tarot-entry-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:10px 20px; border-radius:22px; border:1px solid var(--gold);
+  background:#fffbf0; color:var(--gold); font-size:13px; font-weight:700;
+  cursor:pointer; -webkit-appearance:none; transition: all .15s;
+}
+.tarot-entry-btn:active { background:var(--gold); color:#fff; }
+.tarot-chip-row { display:flex; gap:7px; flex-wrap:wrap; }
+.tarot-chip {
+  padding:8px 14px; border-radius:20px; border:1px solid var(--line);
+  background:rgba(255,255,255,0.75); color:var(--ink-soft);
+  font-size:12px; font-weight:700; cursor:pointer; -webkit-appearance:none; transition: all .15s;
+}
+.tarot-chip.active { border:2px solid var(--gold); background:#fffbf0; color:var(--gold); }
+.tarot-spread-desc { font-size:11px; color:#9a968c; line-height:1.7; margin-top:6px; }
+.tarot-cards {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px; max-width:520px; margin:18px auto 4px;
+}
+.tarot-cards.is-one { grid-template-columns:minmax(0,1fr); max-width:220px; }
+.tarot-card { text-align:center; }
+.tarot-card-frame {
+  border-radius:10px; overflow:hidden; border:1px solid var(--line);
+  background:#fff; box-shadow:0 12px 26px -16px rgba(26,26,46,0.5);
+  /* 読み込み前でも高さを持たせる。0高だとレイアウトが飛ぶ */
+  aspect-ratio:800/1380;
+}
+.tarot-card-frame img { display:block; width:100%; height:100%; object-fit:cover; }
+.tarot-card.is-reversed .tarot-card-frame img { transform:rotate(180deg); }
+.tarot-card-pos { font-size:10px; color:#9a968c; letter-spacing:1px; margin-bottom:5px; }
+.tarot-card-name { font-family:var(--font-display); font-size:13px; font-weight:600; color:var(--ink); margin-top:7px; }
+.tarot-card-orient { font-size:10px; color:var(--ink-soft); margin-top:2px; }
+.tarot-card.is-reversed .tarot-card-orient { color:var(--gold); }
+.tarot-card-ph {
+  aspect-ratio:800/1380; display:flex; align-items:center; justify-content:center;
+  background:repeating-linear-gradient(135deg,#f4f1ea 0 8px,#faf8f3 8px 16px);
+  color:#b9b2a4; font-size:10px; text-align:center; padding:6px;
+}
 </style>
 </head>
 <body>
@@ -338,6 +382,7 @@ h1 { text-align:center; font-family:var(--font-display); font-size:21px; font-we
 
 <div class="app" id="main-page" style="display:none"></div>
 <div class="app" id="aisho-page" style="display:none"></div>
+<div class="app" id="tarot-page" style="display:none"></div>
 
 <script>
 // ====== ENGINE (identical logic to verified JSX) ======
@@ -709,6 +754,10 @@ function render(){
     html+='</div></div></div>';
     html+='<button class="calc-btn" id="btn-calc">命式を算出</button>';
     html+='</div>';
+    html+='<div class="tarot-entry">';
+    html+='<div class="tarot-entry-note">生年月日がわからない方はこちら</div>';
+    html+='<button class="tarot-entry-btn" onclick="showTarot()">'+ICONS.sparkle+'タロットで占う</button>';
+    html+='</div>';
     html+='<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px">';
     html+='<button class="topback-btn" onclick="showModeSelect()">'+ICONS.home+'トップに戻る</button>';
     html+='<button class="topback-btn" onclick="showAisho()" style="border-color:#e8c98f;color:#b8860b">'+ICONS.couple+'相性占いへ</button>';
@@ -946,6 +995,7 @@ function showModeSelect(){
   document.getElementById('mode-select').style.display='block';
   document.getElementById('main-page').style.display='none';
   document.getElementById('aisho-page').style.display='none';
+  document.getElementById('tarot-page').style.display='none';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function showAisho(){
@@ -961,6 +1011,7 @@ function showAisho(){
   document.getElementById('mode-select').style.display='none';
   document.getElementById('main-page').style.display='none';
   document.getElementById('aisho-page').style.display='block';
+  document.getElementById('tarot-page').style.display='none';
   renderAisho();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -968,6 +1019,7 @@ function showMain(){
   document.getElementById('mode-select').style.display='none';
   document.getElementById('aisho-page').style.display='none';
   document.getElementById('main-page').style.display='block';
+  document.getElementById('tarot-page').style.display='none';
   render();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1280,8 +1332,13 @@ function copyAishoAiResult(){
 }
 </script>
 <script>
+// 書き込み先はリクエストの mode で決める。ページを行き来すると非表示の要素が
+// DOM に残るため、先に見つかった結果欄に書くと別モードの欄へ流れてしまう。
 async function startStream(url, options) {
-  const reqBody = JSON.parse(options.body); const isAisho = reqBody.mode === 'aisho'; const resultBox = document.getElementById(isAisho ? 'aishoAiFortuneResult' : 'aiFortuneResult');
+  const reqBody = JSON.parse(options.body);
+  const resultBox = document.getElementById(
+    reqBody.mode === 'tarot' ? 'tarot-result' :
+    reqBody.mode === 'aisho' ? 'aishoAiFortuneResult' : 'aiFortuneResult');
   const res = await fetch(url, options);
   if (!res.ok) {
     const text = await res.text();
@@ -1322,6 +1379,239 @@ async function startStream(url, options) {
   if (resultBox) resultBox.textContent = finalTxt;
 
   return { fortune: finalTxt };
+}
+</script>
+<script>
+/* ==========================================================================
+   タロットモード（生年月日を使わない卜術）
+   既存の算命学・相性のコードパスからは独立。DOM ID はすべて tarot- 接頭辞。
+   カードの意味は data/tarot-data.json から引き、AI には解釈を生成させない。
+   ========================================================================== */
+
+var tarotState = {
+  name: '',
+  question: '',
+  context: 'general',
+  spread: 'one_oracle',
+  data: null,
+  drawn: null
+};
+
+/** カードデータの読み込み。1度読んだら使い回す */
+function loadTarotData(){
+  if(tarotState.data) return Promise.resolve(tarotState.data);
+  return fetch('/data/tarot-data.json', {cache:'force-cache'}).then(function(res){
+    if(!res.ok) throw new Error('カードデータの取得に失敗しました（status '+res.status+'）');
+    return res.json();
+  }).then(function(json){
+    tarotState.data = json;
+    return json;
+  });
+}
+
+function currentSpread(){
+  var list = tarotState.data.spreads;
+  for(var i=0;i<list.length;i++){ if(list[i].id===tarotState.spread) return list[i]; }
+  return list[0];
+}
+
+/** 0以上n未満の整数。剰余の偏りを避けるため上限を切り捨ててから引く */
+function tarotRand(n){
+  if(window.crypto && window.crypto.getRandomValues){
+    var buf = new Uint32Array(1);
+    var limit = Math.floor(4294967296 / n) * n;
+    do { window.crypto.getRandomValues(buf); } while(buf[0] >= limit);
+    return buf[0] % n;
+  }
+  return Math.floor(Math.random() * n);
+}
+
+/**
+ * シャッフル・抽選・正逆判定。すべてクライアント側で完結させる。
+ * Fisher-Yates で22枚を混ぜて先頭から取るので、1回の鑑定内で同じカードは出ない。
+ */
+function drawTarotCards(spread){
+  var deck = tarotState.data.cards.slice();
+  for(var i=deck.length-1;i>0;i--){
+    var j = tarotRand(i+1);
+    var t = deck[i]; deck[i] = deck[j]; deck[j] = t;
+  }
+  var out = [];
+  for(var k=0;k<spread.card_count;k++){
+    out.push({ card: deck[k], position: spread.positions[k], reversed: tarotRand(2)===1 });
+  }
+  return out;
+}
+
+/** 引いたカードを絵柄で表示。逆位置は180度回転させる */
+function renderTarotCards(drawn){
+  var html = '<div class="tarot-cards'+(drawn.length===1?' is-one':'')+'">';
+  for(var i=0;i<drawn.length;i++){
+    var x = drawn[i];
+    var alt = esc(x.card.name)+'（'+esc(x.card.name_en)+'）';
+    html += '<div class="tarot-card'+(x.reversed?' is-reversed':'')+'">';
+    html += '<div class="tarot-card-pos">'+esc(x.position.label)+'</div>';
+    html += '<div class="tarot-card-frame">';
+    html += '<img src="/img/tarot/'+esc(x.card.image)+'" alt="'+alt+'" width="800" height="1380" '+
+            'onerror="this.parentNode.innerHTML=\'<div class=&quot;tarot-card-ph&quot;>'+esc(x.card.name)+'</div>\'">';
+    html += '</div>';
+    html += '<div class="tarot-card-name">'+esc(x.card.name)+'</div>';
+    html += '<div class="tarot-card-orient">'+(x.reversed?'逆位置':'正位置')+'</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('tarot-cards-area').innerHTML = html;
+}
+
+function renderTarot(){
+  var d = tarotState.data;
+  var html = '<h1>いつきのタロット</h1>';
+  html += '<div class="sub">生年月日は使いません。いまの問いにカードが答えます</div>';
+  html += '<div style="max-width:560px;margin:0 auto">';
+
+  html += '<div class="form-box">';
+  html += '<div style="margin-bottom:12px"><span class="form-label">お名前</span>';
+  html += '<input type="text" id="tarot-name" class="form-select" style="width:100%" placeholder="田中 太郎" value="'+esc(tarotState.name)+'"></div>';
+
+  html += '<div style="margin-bottom:12px"><span class="form-label">相談内容</span>';
+  html += '<textarea id="tarot-question" class="form-select" style="width:100%;height:78px;resize:vertical;line-height:1.7" '+
+          'placeholder="今の仕事を続けるべきか">'+esc(tarotState.question)+'</textarea></div>';
+
+  html += '<div style="margin-bottom:12px"><span class="form-label">占う分野</span><div class="tarot-chip-row">';
+  var keys = Object.keys(d.contexts);
+  for(var i=0;i<keys.length;i++){
+    html += '<button class="tarot-chip'+(tarotState.context===keys[i]?' active':'')+'" data-ctx="'+keys[i]+'">'+esc(d.contexts[keys[i]])+'</button>';
+  }
+  html += '</div></div>';
+
+  html += '<div style="margin-bottom:14px"><span class="form-label">引き方</span><div class="tarot-chip-row">';
+  for(var j=0;j<d.spreads.length;j++){
+    var sp = d.spreads[j];
+    html += '<button class="tarot-chip'+(tarotState.spread===sp.id?' active':'')+'" data-spread="'+esc(sp.id)+'">'+esc(sp.name)+'（'+sp.card_count+'枚）</button>';
+  }
+  html += '</div><div class="tarot-spread-desc" id="tarot-spread-desc">'+esc(currentSpread().description)+'</div></div>';
+
+  html += '<button class="calc-btn" id="tarot-draw-btn" onclick="startTarotFortune()">カードを引く</button>';
+  html += '</div>';
+
+  html += '<div id="tarot-cards-area"></div>';
+
+  html += '<div class="ai-result-box" id="tarot-result-area" style="display:none">';
+  html += '<div class="ai-result-title">いつきからの鑑定</div>';
+  html += '<div class="ai-result-content" id="tarot-result"></div>';
+  html += '<button class="ai-copy-btn" id="tarot-copy-btn" onclick="copyTarotResult()">結果をコピーする</button>';
+  html += '</div>';
+
+  html += '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px">';
+  html += '<button class="topback-btn" onclick="showModeSelect()">'+ICONS.home+'トップに戻る</button>';
+  html += '<button class="topback-btn" onclick="showMain()">'+ICONS.person+'生年月日から占う</button>';
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById('tarot-page').innerHTML = html;
+  bindTarot();
+}
+
+/** 選択は再描画せずその場で切り替える（引いたカードと鑑定文を消さないため） */
+function bindTarot(){
+  var page = document.getElementById('tarot-page');
+  var nameEl = document.getElementById('tarot-name');
+  if(nameEl) nameEl.oninput = function(){ tarotState.name = this.value; };
+  var qEl = document.getElementById('tarot-question');
+  if(qEl) qEl.oninput = function(){ tarotState.question = this.value; };
+
+  var ctxBtns = page.querySelectorAll('[data-ctx]');
+  for(var i=0;i<ctxBtns.length;i++){
+    (function(btn){
+      btn.onclick = function(){
+        tarotState.context = btn.getAttribute('data-ctx');
+        for(var k=0;k<ctxBtns.length;k++) ctxBtns[k].classList.toggle('active', ctxBtns[k]===btn);
+      };
+    })(ctxBtns[i]);
+  }
+
+  var spBtns = page.querySelectorAll('[data-spread]');
+  for(var j=0;j<spBtns.length;j++){
+    (function(btn){
+      btn.onclick = function(){
+        tarotState.spread = btn.getAttribute('data-spread');
+        for(var k=0;k<spBtns.length;k++) spBtns[k].classList.toggle('active', spBtns[k]===btn);
+        var desc = document.getElementById('tarot-spread-desc');
+        if(desc) desc.textContent = currentSpread().description;
+      };
+    })(spBtns[j]);
+  }
+}
+
+function showTarot(){
+  document.getElementById('mode-select').style.display='none';
+  document.getElementById('main-page').style.display='none';
+  document.getElementById('aisho-page').style.display='none';
+  document.getElementById('tarot-page').style.display='block';
+  if(!tarotState.name && state.name) tarotState.name = state.name;
+
+  loadTarotData().then(function(){
+    renderTarot();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }).catch(function(e){
+    document.getElementById('tarot-page').innerHTML =
+      '<h1>いつきのタロット</h1><div class="form-box" style="max-width:480px;margin:16px auto">'+
+      '<span style="color:#c4342d;font-size:13px">'+ICONS.warn+esc(e.message)+'</span></div>'+
+      '<div style="text-align:center"><button class="topback-btn" onclick="showModeSelect()">'+ICONS.home+'トップに戻る</button></div>';
+  });
+}
+
+function startTarotFortune(){
+  var btn = document.getElementById('tarot-draw-btn');
+  var spread = currentSpread();
+  var drawn = drawTarotCards(spread);
+  tarotState.drawn = drawn;
+  renderTarotCards(drawn);
+
+  var area = document.getElementById('tarot-result-area');
+  var box = document.getElementById('tarot-result');
+  area.style.display = 'block';
+  box.textContent = 'いつきが、並んだカードをじっくり見ています…';
+  btn.disabled = true;
+  btn.textContent = 'カードを読み解いています（約30秒）...';
+
+  // AI に渡すのは仕様書のペイロードのみ。意味は tarot-data.json から引いたものだけ。
+  var payload = {
+    mode: 'tarot',
+    name: (tarotState.name||'').trim(),
+    question: (tarotState.question||'').trim() || 'いま自分に必要なことを教えてください',
+    spread: spread.name,
+    context: tarotState.data.contexts[tarotState.context],
+    cards: drawn.map(function(x){
+      var side = x.reversed ? x.card.reversed : x.card.upright;
+      return {
+        position: x.position.label,
+        card: x.card.name,
+        orientation: x.reversed ? '逆位置' : '正位置',
+        meaning: side[tarotState.context],
+        guidance: side.guidance
+      };
+    })
+  };
+
+  startStream('/api/ai-fortune', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  }).then(function(){
+    btn.disabled = false;
+    btn.textContent = 'もう一度引く';
+  }).catch(function(e){
+    box.innerHTML = '<span style="color:#c4342d">'+ICONS.warn+'エラーが発生しました：'+esc(e.message)+'</span>';
+    btn.disabled = false;
+    btn.textContent = 'もう一度引く';
+  });
+}
+
+function copyTarotResult(){
+  var box = document.getElementById('tarot-result');
+  if(!box) return;
+  doCopy(box.textContent, 'tarot-copy-btn', '結果をコピーする');
 }
 </script>
 </body>
