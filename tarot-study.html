@@ -754,7 +754,7 @@ let lastDraw = null;
 const $ = id => document.getElementById(id);
 const imgTag = (c, rev) =>
   `<img src="img/tarot/${c.image}" alt="${c.name}" loading="lazy"
-     onerror="this.parentNode.innerHTML='<span>'+${JSON.stringify(c.number)}+'</span>'">`;
+     onerror="this.parentNode.innerHTML='<span>${c.number}</span>'">`;
 
 /* ---- タブ ---- */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
