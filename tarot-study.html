@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>タロットあんちょこ</title>
+<style>
+:root{
+  --bg:#fbfaf7; --panel:#fff; --ink:#1f1d1a; --sub:#6f6a61; --line:#e5e0d6;
+  --accent:#6d3f8f; --soft:#f2ebf7; --rev:#b0562e; --shadow:0 1px 3px rgba(0,0,0,.05);
+}
+:root:not([data-theme="light"]){@media(prefers-color-scheme:dark){
+  --bg:#15141a; --panel:#1f1e26; --ink:#efece6; --sub:#a39e95; --line:#33313c;
+  --accent:#c49bec; --soft:#2a2334; --rev:#e0885a; --shadow:none;
+}}
+:root[data-theme="dark"]{
+  --bg:#15141a; --panel:#1f1e26; --ink:#efece6; --sub:#a39e95; --line:#33313c;
+  --accent:#c49bec; --soft:#2a2334; --rev:#e0885a; --shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.75;
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  padding:16px 14px 70px;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto}
+header{margin-bottom:14px}
+h1{font-size:1.05rem;margin:0;letter-spacing:.06em}
+.sub{font-size:.75rem;color:var(--sub);margin:2px 0 0}
+
+/* タブ */
+.tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.tab{flex:1;padding:10px 4px;background:none;border:0;border-bottom:2px solid transparent;
+  color:var(--sub);font-size:.85rem;font-family:inherit;font-weight:600;cursor:pointer;letter-spacing:.04em}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* 共通 */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;
+  margin-bottom:14px;box-shadow:var(--shadow)}
+label{display:block;font-size:.74rem;color:var(--sub);margin-bottom:5px;letter-spacing:.05em}
+input[type=text],select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;
+  background:var(--bg);color:var(--ink);font-size:.92rem;font-family:inherit}
+.btn{padding:12px 16px;border:0;border-radius:8px;background:var(--accent);color:#fff;
+  font-size:.88rem;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:.05em}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:8px;margin-top:12px}
+.row .btn{flex:1}
+.hide{display:none !important}
+
+/* 一覧 */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{padding:7px 13px;background:var(--panel);border:0;color:var(--sub);
+  font-size:.76rem;font-family:inherit;font-weight:600;cursor:pointer}
+.seg button.on{background:var(--accent);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.thumb{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 5px;
+  text-align:center;cursor:pointer;transition:border-color .12s}
+.thumb:active{border-color:var(--accent)}
+.thumb .ph{aspect-ratio:100/171;border-radius:5px;overflow:hidden;background:var(--soft);
+  display:flex;align-items:center;justify-content:center;margin-bottom:5px}
+.thumb .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .ph span{font-size:.95rem;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.thumb b{display:block;font-size:.76rem;font-weight:600}
+.thumb i{display:block;font-size:.64rem;color:var(--sub);font-style:normal}
+
+/* 詳細 */
+.detail{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:40;
+  padding:16px 14px 60px;-webkit-overflow-scrolling:touch}
+.close{position:sticky;top:0;float:right;background:var(--panel);border:1px solid var(--line);
+  color:var(--ink);border-radius:99px;width:34px;height:34px;font-size:1.1rem;cursor:pointer;
+  font-family:inherit;line-height:1;z-index:2}
+.dhead{display:flex;gap:14px;margin-bottom:16px;align-items:flex-start}
+.dhead .ph{width:104px;flex-shrink:0;aspect-ratio:100/171;border-radius:7px;overflow:hidden;
+  background:var(--soft);display:flex;align-items:center;justify-content:center}
+.dhead .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.dhead .ph span{font-size:1.4rem;font-weight:700;color:var(--accent)}
+.dhead .ph.rev img{transform:rotate(180deg)}
+.dname{font-size:1.35rem;font-weight:700;letter-spacing:.04em;margin:0}
+.den{font-size:.72rem;color:var(--sub);margin:0 0 8px}
+.kw{display:flex;gap:5px;flex-wrap:wrap}
+.kw span{font-size:.68rem;padding:2px 8px;border:1px solid var(--line);border-radius:99px;color:var(--sub)}
+.ori{display:inline-block;font-size:.68rem;padding:2px 9px;border-radius:99px;
+  background:var(--soft);color:var(--accent);font-weight:700;margin-bottom:6px}
+.ori.r{color:var(--rev);background:transparent;border:1px solid var(--rev)}
+.mrow{border-top:1px solid var(--line);padding:11px 0}
+.mrow dt{font-size:.68rem;color:var(--sub);letter-spacing:.09em;margin-bottom:3px}
+.mrow dd{margin:0;font-size:.9rem}
+.guide{background:var(--soft);border-radius:8px;padding:11px 13px;font-size:.86rem;margin-top:10px}
+.guide::before{content:"指針 ";font-size:.66rem;letter-spacing:.1em;color:var(--accent);font-weight:700}
+.masked{filter:blur(5px);cursor:pointer;user-select:none}
+
+/* 引く */
+.card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;
+  background:var(--panel);box-shadow:var(--shadow)}
+.pos{font-size:.68rem;letter-spacing:.11em;color:var(--accent);font-weight:700;margin-bottom:9px}
+.cbody{display:flex;gap:13px}
+.cbody .ph{width:78px;flex-shrink:0;aspect-ratio:100/171;border-radius:6px;overflow:hidden;
+  background:var(--soft);display:flex;align-items:center;justify-content:center}
+.cbody .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.cbody .ph.rev img{transform:rotate(180deg)}
+.cbody .ph span{font-size:1.05rem;font-weight:700;color:var(--accent)}
+.cname{font-size:1.1rem;font-weight:700;letter-spacing:.03em;margin:0 0 3px}
+.meaning{font-size:.88rem;margin:8px 0 0}
+.empty{color:var(--sub);font-size:.84rem;text-align:center;padding:34px 0}
+#aiOut{white-space:pre-wrap;font-size:.92rem}
+.note{font-size:.74rem;color:var(--sub);margin-top:9px}
+.err{color:var(--rev);font-size:.82rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>タロットあんちょこ</h1>
+    <p class="sub">大アルカナ22枚 ／ 正逆 × 5文脈</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab on" data-tab="list">カード一覧</button>
+    <button class="tab" data-tab="draw">引く</button>
+  </div>
+
+  <!-- ===== 一覧 ===== -->
+  <section id="tab-list">
+    <div class="toolbar">
+      <div class="seg" id="segCtx"></div>
+      <div class="seg">
+        <button id="btnMask">暗記モード</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- ===== 引く ===== -->
+  <section id="tab-draw" class="hide">
+    <div class="panel">
+      <label for="dName">お名前</label>
+      <input type="text" id="dName" placeholder="いつき">
+      <div style="margin-top:11px">
+        <label for="dQ">相談内容</label>
+        <input type="text" id="dQ" placeholder="例：今の仕事を続けるべきか">
+      </div>
+      <div style="margin-top:11px">
+        <label for="dCtx">読む文脈</label>
+        <select id="dCtx"></select>
+      </div>
+      <div class="row">
+        <button class="btn" onclick="draw('one_oracle')">1枚引く</button>
+        <button class="btn ghost" onclick="draw('three_card')">3枚引く</button>
+      </div>
+    </div>
+    <div id="drawOut"><div class="empty">ボタンを押すとカードが出ます</div></div>
+    <div class="panel hide" id="aiPanel">
+      <button class="btn" id="aiBtn" style="width:100%" onclick="callAi()">AIに鑑定文を書いてもらう</button>
+      <p class="note" id="aiNote">この操作だけ Gemini API を使います。カードと意味の表示までは無料です。</p>
+      <button class="btn ghost" id="copyBtn" style="width:100%;margin-top:6px" onclick="copyPrompt()">プロンプトをコピー</button>
+      <p class="note">ChatGPT や Claude にそのまま貼れる形でコピーします。API は使いません。</p>
+      <div id="aiOut"></div>
+    </div>
+  </section>
+</div>
+
+<div class="detail hide" id="detail"></div>
+
+<script>
+const DATA = {
+  "meta": {
+    "version": "1.0",
+    "deck": "major_arcana_only",
+    "card_count": 22,
+    "note": "大アルカナ22枚。正位置/逆位置 × 文脈別の意味を保持。AIには解釈を生成させず、このデータの統合と文章化のみを行わせる。"
+  },
+  "contexts": {
+    "general": "総合・全体運",
+    "love": "恋愛",
+    "work": "仕事・キャリア",
+    "relationship": "対人関係",
+    "self": "自分自身・内面"
+  },
+  "spreads": [
+    {
+      "id": "one_oracle",
+      "name": "ワンオラクル",
+      "card_count": 1,
+      "description": "1枚で今この瞬間の答えを示す。イエス・ノーではなく方向性を読む。",
+      "positions": [
+        {
+          "index": 0,
+          "label": "答え",
+          "meaning": "相談内容に対して、今もっとも意識すべきこと"
+        }
+      ]
+    },
+    {
+      "id": "three_card",
+      "name": "スリーカード",
+      "card_count": 3,
+      "description": "時間の流れ、または状況の構造を3枚で読む。",
+      "positions": [
+        {
+          "index": 0,
+          "label": "過去／現状",
+          "meaning": "今の状況を作っている背景。すでに起きたこと"
+        },
+        {
+          "index": 1,
+          "label": "現在／障害",
+          "meaning": "今まさに向き合っているテーマ。動きを止めている要因"
+        },
+        {
+          "index": 2,
+          "label": "未来／結果",
+          "meaning": "このまま進んだ場合に向かう方向。確定ではなく傾向"
+        }
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "id": 0,
+      "number": "0",
+      "name": "愚者",
+      "name_en": "The Fool",
+      "image": "00-fool.jpg",
+      "keywords": ["自由", "始まり", "無垢", "可能性", "型にはまらない"],
+      "upright": {
+        "general": "計算や前例に縛られず、身軽に踏み出せる時期。準備不足に見えても動くこと自体に意味がある",
+        "love": "肩書きや条件を抜きにした自然な惹かれ合い。関係の定義を急がない方がうまくいく",
+        "work": "未経験の分野や前例のない仕事に飛び込む好機。完璧な計画より着手が価値を生む",
+        "relationship": "利害を離れた付き合い。相手を評価せずそのまま受け取る姿勢が信頼を生む",
+        "self": "本来の自分に近い状態。周囲の期待から自由になれている",
+        "guidance": "行き先が決まっていないことを不安材料にしない。今は「決めない」ことが最善の選択"
+      },
+      "reversed": {
+        "general": "無計画さが空回りしている。または踏み出すべき場面で足がすくんでいる",
+        "love": "気まぐれな態度が相手を不安にさせている。あるいは相手の本気度が見えず宙ぶらりん",
+        "work": "見通しの甘さが表面化する時期。または挑戦したい気持ちを常識で押さえ込んでいる",
+        "relationship": "距離感がつかめず、軽く扱われていると感じる。あるいは自分が場を軽く扱っている",
+        "self": "自由でいたい気持ちと、責任を果たしたい気持ちが引き裂かれている",
+        "guidance": "全部を自由にする必要はない。ひとつだけ期限や約束を決めると、他の部分は自由でいられる"
+      }
+    },
+    {
+      "id": 1,
+      "number": "I",
+      "name": "魔術師",
+      "name_en": "The Magician",
+      "image": "01-magician.jpg",
+      "keywords": ["創造", "意志", "技術", "始動", "才能の行使"],
+      "upright": {
+        "general": "手持ちの材料で望むものを形にできる状態。意志が現実に届く時期",
+        "love": "自分から働きかけることで関係が動く。伝える言葉が届きやすい",
+        "work": "技術やスキルが正当に評価される。新しい企画の立ち上げに向く",
+        "relationship": "自分が場をつくる側に回れる。人をつなぐ役割が合っている",
+        "self": "何を望んでいるかが自分でわかっている。迷いが少ない",
+        "guidance": "待つより先に動く。今は自分から仕掛けたことが、そのまま結果につながる"
+      },
+      "reversed": {
+        "general": "能力はあるが使いどころを外している。または見せ方が実態を上回っている",
+        "love": "駆け引きが過ぎて本心が伝わらない。テクニックより率直さが必要",
+        "work": "準備不足のまま押し切ろうとしている。あるいは実力を出す場が与えられていない",
+        "relationship": "口先だけの人に振り回される。または自分の言葉が軽く受け取られている",
+        "self": "何がしたいのかが自分でも曖昧なまま動いている",
+        "guidance": "うまくやろうとするのをやめて、一番シンプルな手段を選ぶ。技より誠実さが効く局面"
+      }
+    },
+    {
+      "id": 2,
+      "number": "II",
+      "name": "女教皇",
+      "name_en": "The High Priestess",
+      "image": "02-high-priestess.jpg",
+      "keywords": ["直感", "静観", "知性", "秘めた事柄", "冷静さ"],
+      "upright": {
+        "general": "動くより見極める時期。表に出ていない事実がまだある",
+        "love": "静かに育っている感情。言葉にしないことで保たれている関係",
+        "work": "分析と学習が実を結ぶ。目立たない準備が後で効いてくる",
+        "relationship": "少数の深い関係が支えになる。広く付き合う必要はない",
+        "self": "自分の内側の声が正確に働いている。直感を疑わなくていい",
+        "guidance": "結論を出すのを一度保留する。情報が出そろっていない今の判断は精度が低い"
+      },
+      "reversed": {
+        "general": "感情や思い込みが判断を曇らせている。または閉じすぎて情報が入ってこない",
+        "love": "本音を隠しすぎて距離が広がっている。相手の気持ちを勝手に決めつけている",
+        "work": "知識不足のまま進めている、あるいは知っているのに共有していない",
+        "relationship": "秘密や誤解が関係をこじらせる。閉じた態度が冷たさと受け取られている",
+        "self": "考えすぎて動けない。頭の中だけで完結してしまっている",
+        "guidance": "ひとりで抱えている前提を、信頼できる相手に一度だけ話してみる。それだけで視界が変わる"
+      }
+    },
+    {
+      "id": 3,
+      "number": "III",
+      "name": "女帝",
+      "name_en": "The Empress",
+      "image": "03-empress.jpg",
+      "keywords": ["豊かさ", "受容", "育む", "実り", "感受性"],
+      "upright": {
+        "general": "与えられるものが増える時期。育ててきたものが形になる",
+        "love": "包容力のある関係。相手を受け入れることで愛情が深まる",
+        "work": "成果が実る段階。人を育てる立場や、感性を使う仕事が伸びる",
+        "relationship": "面倒を見る側に回ることで信頼を得る。人が自然と集まる",
+        "self": "心身が満たされている。自分を甘やかすことが必要な時期",
+        "guidance": "今は生み出すより、育てる時期。手をかけているものから離れないこと"
+      },
+      "reversed": {
+        "general": "与えすぎて消耗している。または受け取ることに罪悪感がある",
+        "love": "過干渉や依存が関係を重くしている。距離が必要",
+        "work": "成果を急ぎすぎている。または尽くしているのに還ってこない",
+        "relationship": "面倒を見る役割が固定化して負担になっている",
+        "self": "自分の世話が後回しになっている。感情が満たされていない",
+        "guidance": "誰かのために使っている時間を、今週ひとつだけ自分に振り替える。それは怠けではない"
+      }
+    },
+    {
+      "id": 4,
+      "number": "IV",
+      "name": "皇帝",
+      "name_en": "The Emperor",
+      "image": "04-emperor.jpg",
+      "keywords": ["統率", "責任", "秩序", "決断", "現実的な力"],
+      "upright": {
+        "general": "自分で決めて自分で責任を取る局面。主導権を握れる時期",
+        "love": "関係をはっきりさせる時。曖昧さを残さない方が続く",
+        "work": "決定権を持つ立場。ルールや枠組みを整えることで成果が出る",
+        "relationship": "頼られる側に立つ。線引きをはっきりさせた方が関係が安定する",
+        "self": "意志が固まっている。自分の判断を信じていい状態",
+        "guidance": "誰かの許可を待たない。決めるのは自分だと引き受けたとき、状況が動き出す"
+      },
+      "reversed": {
+        "general": "力の使い方を誤っている。または権威に押さえつけられている",
+        "love": "支配的な態度が相手を追い詰めている。あるいは相手に主導権を握られすぎている",
+        "work": "強引な進め方が反発を招く。または上の判断に納得できないまま従っている",
+        "relationship": "上下関係が固定して息苦しい。対等さが失われている",
+        "self": "頑固さが柔軟さを奪っている。守りに入っている",
+        "guidance": "コントロールを手放す対象をひとつ決める。全部を自分で握らなくても、崩れはしない"
+      }
+    },
+    {
+      "id": 5,
+      "number": "V",
+      "name": "教皇",
+      "name_en": "The Hierophant",
+      "image": "05-hierophant.jpg",
+      "keywords": ["伝統", "学び", "信頼", "助言", "正統性"],
+      "upright": {
+        "general": "既にある型や先人の知恵が助けになる。相談すべき相手がいる",
+        "love": "誠実で安定した関係。周囲に認められる形に進みやすい",
+        "work": "組織やルールの中で信頼を積む時期。師や先輩の助言が効く",
+        "relationship": "年長者や経験者との縁が支えになる。礼儀が関係を守る",
+        "self": "自分の中の道徳や信念がはっきりしている",
+        "guidance": "自己流でやってきたことを、一度きちんと習う。近道に見えて実は一番速い"
+      },
+      "reversed": {
+        "general": "形式が中身を上回っている。または既存のやり方が合わなくなっている",
+        "love": "世間体や条件が優先されて気持ちが置き去りになっている",
+        "work": "慣習が足枷になっている。または信頼できる助言者がいない",
+        "relationship": "建前だけの付き合いに疲れている",
+        "self": "他人の価値観を自分のものだと思い込んでいる",
+        "guidance": "「そういうものだから」で受け入れているものを一つ疑ってみる。合わない型は外していい"
+      }
+    },
+    {
+      "id": 6,
+      "number": "VI",
+      "name": "恋人",
+      "name_en": "The Lovers",
+      "image": "06-lovers.jpg",
+      "keywords": ["選択", "共鳴", "結びつき", "誘惑", "価値観の一致"],
+      "upright": {
+        "general": "心が動く方を選んでいい局面。共鳴できる相手や物事が現れる",
+        "love": "気持ちが通じ合う時期。素直に楽しめる関係",
+        "work": "パートナーシップや協業がうまくいく。好きだと思える仕事を選ぶべき時",
+        "relationship": "価値観の合う相手との出会い。無理のない関係",
+        "self": "自分が何を好きかがはっきりしている",
+        "guidance": "損得ではなく、心が動く方を選ぶ。今回はそれが正解になる"
+      },
+      "reversed": {
+        "general": "選べずに宙ぶらりん。または一時の感情に流されている",
+        "love": "熱が冷めている、あるいは相手との温度差が開いている",
+        "work": "協力関係がうまくいかない。安易な条件に流されそうになっている",
+        "relationship": "気が合うと思っていた相手とのズレが見えてくる",
+        "self": "本当に望んでいることから目をそらしている",
+        "guidance": "決められないなら、両方に期限を切る。選ばないままでいる時間が一番損失が大きい"
+      }
+    },
+    {
+      "id": 7,
+      "number": "VII",
+      "name": "戦車",
+      "name_en": "The Chariot",
+      "image": "07-chariot.jpg",
+      "keywords": ["前進", "突破", "勝利", "行動力", "自制"],
+      "upright": {
+        "general": "勢いに乗って進める時期。迷わず動いた方が結果が出る",
+        "love": "積極的な行動が実る。待っていても始まらない",
+        "work": "推進力が評価される。困難を押し切って前に出る局面",
+        "relationship": "自分から声をかけることで関係が広がる",
+        "self": "気力が充実している。目標が明確",
+        "guidance": "速度を落とさない。今のペースを維持すること自体が武器になる"
+      },
+      "reversed": {
+        "general": "空回り、または方向を見失っている。焦りが判断を狂わせる",
+        "love": "強引さが相手を引かせている。あるいは進展せず足踏み",
+        "work": "無理な進め方で足元が崩れる。エネルギー切れ",
+        "relationship": "競争心が関係を壊している",
+        "self": "頑張り方を間違えている。休息が必要",
+        "guidance": "止まるのは後退ではない。一度降りて地図を見る時間が、結果的に一番早い"
+      }
+    },
+    {
+      "id": 8,
+      "number": "VIII",
+      "name": "力",
+      "name_en": "Strength",
+      "image": "08-strength.jpg",
+      "keywords": ["内なる強さ", "忍耐", "受け止める", "優しさ", "持続"],
+      "upright": {
+        "general": "力ずくではなく、粘り強さと優しさで状況が動く",
+        "love": "焦らず育てることで深まる関係。相手を信じて待てる",
+        "work": "地道な継続が結果を出す。感情的にならず対処できている",
+        "relationship": "相手の弱さを受け止めることで信頼が生まれる",
+        "self": "自分の感情を制御できている。芯が強い",
+        "guidance": "打ち負かすのではなく、なだめて味方にする。今回はその方が確実に届く"
+      },
+      "reversed": {
+        "general": "感情に振り回されている。または我慢が限界に近い",
+        "love": "不安から相手を試している。嫉妬や執着が出やすい",
+        "work": "自信を失っている。または感情を抑え込みすぎて消耗している",
+        "relationship": "気を遣いすぎて疲れている。本音を出せていない",
+        "self": "自己否定が強くなっている",
+        "guidance": "我慢の総量を減らす。全部を受け止める必要はなく、断ることも強さのうち"
+      }
+    },
+    {
+      "id": 9,
+      "number": "IX",
+      "name": "隠者",
+      "name_en": "The Hermit",
+      "image": "09-hermit.jpg",
+      "keywords": ["内省", "孤独", "探究", "距離を置く", "本質を見る"],
+      "upright": {
+        "general": "ひとりで考える時間が必要な時期。答えは内側にある",
+        "love": "距離を置くことで見えてくる感情。急がなくていい関係",
+        "work": "専門性を深める時期。数より質、人より自分の基準",
+        "relationship": "広く付き合うより、少数の理解者を大切にする",
+        "self": "自分と向き合えている。静けさが必要な状態",
+        "guidance": "人に相談する前に、自分の答えを紙に書き出す。もう答えは出ている可能性が高い"
+      },
+      "reversed": {
+        "general": "孤立している。または考えすぎて外の世界から切れている",
+        "love": "殻にこもって関係が停滞している。またはすれ違いが長期化",
+        "work": "ひとりで抱え込んで前に進まない。周囲に頼れていない",
+        "relationship": "人を遠ざけすぎて孤独になっている",
+        "self": "自分の世界に閉じて、視野が狭まっている",
+        "guidance": "誰か一人に、結論ではなく途中経過を話す。閉じた思考は外の言葉でしか開かない"
+      }
+    },
+    {
+      "id": 10,
+      "number": "X",
+      "name": "運命の輪",
+      "name_en": "Wheel of Fortune",
+      "image": "10-wheel-of-fortune.jpg",
+      "keywords": ["転機", "巡り合わせ", "変化", "タイミング", "流れ"],
+      "upright": {
+        "general": "流れが変わる時期。予期しない好機が訪れる",
+        "love": "偶然の再会や出会い。タイミングが味方する",
+        "work": "状況が好転する。声がかかる、話が動き出す",
+        "relationship": "縁がつながる時期。人の紹介が鍵になる",
+        "self": "気持ちの切り替えが自然に起きる",
+        "guidance": "来た話に乗る。自分で作らなくても、今は向こうから流れが来ている"
+      },
+      "reversed": {
+        "general": "タイミングが合わない。流れが停滞、または一段落ちる局面",
+        "love": "すれ違いが続く。今動いても噛み合わない",
+        "work": "計画が延期になる。想定外の足止め",
+        "relationship": "縁が薄れる時期。無理につなぎ止めなくていい",
+        "self": "何をしても手応えがない感覚",
+        "guidance": "うまくいかないのは実力の問題ではなく時期の問題。今は種まきに徹して、収穫を求めない"
+      }
+    },
+    {
+      "id": 11,
+      "number": "XI",
+      "name": "正義",
+      "name_en": "Justice",
+      "image": "11-justice.jpg",
+      "keywords": ["公正", "均衡", "判断", "責任", "因果"],
+      "upright": {
+        "general": "筋を通すことで道が開く。やったことが正当に返ってくる",
+        "love": "対等な関係。誠実さが評価される",
+        "work": "公正な評価を受ける。契約や交渉が有利に進む",
+        "relationship": "フェアな態度が信頼を生む。えこひいきをしない",
+        "self": "自分の中の基準がぶれていない",
+        "guidance": "感情ではなく事実で判断する。今回はそのやり方が最も納得のいく結果になる"
+      },
+      "reversed": {
+        "general": "不公平さを感じている。または自分の判断が偏っている",
+        "love": "一方だけが負担している関係。バランスが崩れている",
+        "work": "評価されない、または正当でない条件を飲まされている",
+        "relationship": "貸し借りが偏っている。どちらかが我慢している",
+        "self": "自分に厳しすぎる、または甘すぎる",
+        "guidance": "不均衡を我慢で埋めない。数字や事実にして相手に見せると、状況は変えられる"
+      }
+    },
+    {
+      "id": 12,
+      "number": "XII",
+      "name": "吊るされた男",
+      "name_en": "The Hanged Man",
+      "image": "12-hanged-man.jpg",
+      "keywords": ["停滞", "視点の転換", "受け入れ", "捧げる", "待機"],
+      "upright": {
+        "general": "動けない状況だが、それ自体に意味がある。見方を変えるべき時",
+        "love": "進展しない時期。相手のために待つことが関係を深める",
+        "work": "成果が見えない下積み。今の努力は後で効いてくる",
+        "relationship": "自分から譲ることで関係が保たれる",
+        "self": "価値観が組み替わっている最中",
+        "guidance": "この状況を「無駄な時間」と評価しない。逆さから見ると、別の答えが見えてくる"
+      },
+      "reversed": {
+        "general": "耐える時期が終わる、または無意味な我慢を続けている",
+        "love": "報われない片思いや尽くしすぎ。見切りが必要な段階",
+        "work": "犠牲が大きすぎる。努力の方向が間違っている",
+        "relationship": "一方的に消耗している関係",
+        "self": "耐え続けて感覚が麻痺している",
+        "guidance": "我慢が実を結ぶ期限を自分で決める。そこを過ぎたら降りていい。それは逃げではない"
+      }
+    },
+    {
+      "id": 13,
+      "number": "XIII",
+      "name": "死神",
+      "name_en": "Death",
+      "image": "13-death.jpg",
+      "keywords": ["終わり", "転換", "手放し", "再生", "区切り"],
+      "upright": {
+        "general": "ひとつの段階が終わる。終わることで次が始まる局面",
+        "love": "関係の形が変わる。終わりに見えて、実は関係の質が変わるだけのこともある",
+        "work": "撤退や方針転換の時期。続けることより手放すことに価値がある",
+        "relationship": "縁の入れ替わり。離れる人と新しく来る人がいる",
+        "self": "古い自分の役割が終わろうとしている",
+        "guidance": "終わらせることを失敗と数えない。手放した分だけ、次に入る余白ができる"
+      },
+      "reversed": {
+        "general": "終わらせられずに引きずっている。区切りがつかない",
+        "love": "未練が次に進むのを妨げている",
+        "work": "見切りをつけるべきものにしがみついている",
+        "relationship": "終わった関係を形だけ続けている",
+        "self": "変わりたいのに変われないもどかしさ",
+        "guidance": "全部を切らなくていい。まず「もうやらないこと」を一つだけ決める。そこから動き出す"
+      }
+    },
+    {
+      "id": 14,
+      "number": "XIV",
+      "name": "節制",
+      "name_en": "Temperance",
+      "image": "14-temperance.jpg",
+      "keywords": ["調和", "調整", "中庸", "融合", "適度"],
+      "upright": {
+        "general": "極端に走らずバランスを取ることでうまくいく。異なるものが混ざり合う",
+        "love": "穏やかで無理のない関係。ゆっくり深まっていく",
+        "work": "他部署や異分野との連携が実る。無理のないペース配分が鍵",
+        "relationship": "調整役として機能する。違いを受け入れられている",
+        "self": "心の状態が安定している。感情の起伏が少ない",
+        "guidance": "どちらかに寄せず、両方を少しずつ取る。折衷案が今回は最善策になる"
+      },
+      "reversed": {
+        "general": "バランスを欠いている。過剰か不足のどちらかに振れている",
+        "love": "温度差が広がっている。または関係が惰性になっている",
+        "work": "負荷の偏り。あるいは連携がうまく噛み合っていない",
+        "relationship": "気持ちの往復がなくなっている",
+        "self": "生活リズムや感情が乱れている",
+        "guidance": "一番過剰になっているものを一つ減らす。全体を整えようとせず、そこだけでいい"
+      }
+    },
+    {
+      "id": 15,
+      "number": "XV",
+      "name": "悪魔",
+      "name_en": "The Devil",
+      "image": "15-devil.jpg",
+      "keywords": ["執着", "依存", "束縛", "欲望", "抜け出せなさ"],
+      "upright": {
+        "general": "わかっていてやめられない状態。何かに縛られている",
+        "love": "離れられない関係。強い引力だが健全とは限らない",
+        "work": "条件に縛られて動けない。惰性で続けている",
+        "relationship": "断れない関係。相手のペースに飲まれている",
+        "self": "習慣や思い込みに支配されている",
+        "guidance": "鎖は自分で外せる位置にある。まず「これは選んで続けている」と認めるところから始まる"
+      },
+      "reversed": {
+        "general": "束縛から抜け出す兆し。執着が緩み始めている",
+        "love": "依存関係から目が覚める。距離を取れるようになる",
+        "work": "しがみついていた条件を手放せる。転換のきっかけが来る",
+        "relationship": "断る勇気が出てくる。関係を選び直せる",
+        "self": "自分を縛っていたルールに気づく",
+        "guidance": "抜け出す途中は一番しんどい。戻りたくなるのは異常ではなく、離脱の正常な過程"
+      }
+    },
+    {
+      "id": 16,
+      "number": "XVI",
+      "name": "塔",
+      "name_en": "The Tower",
+      "image": "16-tower.jpg",
+      "keywords": ["崩壊", "衝撃", "予期せぬ変化", "解放", "前提の破壊"],
+      "upright": {
+        "general": "前提が崩れる出来事。ただし崩れるのは、もともと無理があった構造",
+        "love": "関係を揺るがす出来事。隠れていた本音が表に出る",
+        "work": "計画や体制の急変。想定外の事態",
+        "relationship": "関係が一度壊れる。取り繕えなくなる",
+        "self": "思い込みが打ち砕かれる。価値観の強制的な更新",
+        "guidance": "崩れたものは元に戻さない。無理な構造が外れた今が、一番作り直しやすいタイミング"
+      },
+      "reversed": {
+        "general": "崩壊を先延ばしにしている。または衝撃から立ち直る過程",
+        "love": "問題を見ないふりして関係を保っている",
+        "work": "限界が近いのに体制を変えられずにいる",
+        "relationship": "こじれを放置して悪化させている",
+        "self": "変化を恐れて現状にしがみついている",
+        "guidance": "自分から一箇所だけ壊す。自分で選んで壊した場合、崩れ方はコントロールできる"
+      }
+    },
+    {
+      "id": 17,
+      "number": "XVII",
+      "name": "星",
+      "name_en": "The Star",
+      "image": "17-star.jpg",
+      "keywords": ["希望", "指針", "癒し", "理想", "静かな回復"],
+      "upright": {
+        "general": "先が見えてくる時期。傷ついた後の回復と、進むべき方向の発見",
+        "love": "理想に近い関係。穏やかな気持ちで相手を思える",
+        "work": "目指すものがはっきりする。長期的な展望が開ける",
+        "relationship": "心が通じる相手が現れる。無理のない関係",
+        "self": "気持ちが回復してきている。前を向ける",
+        "guidance": "遠くの目標を一つ決める。すぐ届かなくていい。方向が定まれば足取りは安定する"
+      },
+      "reversed": {
+        "general": "希望が見えにくい。理想と現実の差に消耗している",
+        "love": "期待が外れた感覚。理想を相手に押し付けている可能性",
+        "work": "目標を見失っている。やる気が落ちている",
+        "relationship": "期待していた相手にがっかりする",
+        "self": "自信が持てない。回復の途中で足踏みしている",
+        "guidance": "理想の水準を一段下げる。下げた基準で達成すると、そこから本当の自信が戻ってくる"
+      }
+    },
+    {
+      "id": 18,
+      "number": "XVIII",
+      "name": "月",
+      "name_en": "The Moon",
+      "image": "18-moon.jpg",
+      "keywords": ["不安", "曖昧さ", "潜在意識", "見えないもの", "揺らぎ"],
+      "upright": {
+        "general": "全体像が見えない状態。不安が判断を歪めやすい時期",
+        "love": "相手の気持ちが読めない。疑いが生まれやすい",
+        "work": "情報が不足したまま進んでいる。隠れた問題がある",
+        "relationship": "本音が見えない相手。誤解が生じやすい",
+        "self": "漠然とした不安。感情が不安定",
+        "guidance": "不安の中身を具体的に書き出す。輪郭がつくだけで、扱えるサイズになる"
+      },
+      "reversed": {
+        "general": "霧が晴れてくる。誤解や不安の正体が見えてくる",
+        "love": "すれ違いの原因がわかる。話せば解ける段階",
+        "work": "隠れていた問題が表面化して対処できる",
+        "relationship": "誤解が解ける。または相手の本心が見える",
+        "self": "不安が落ち着いてくる。現実感が戻る",
+        "guidance": "見えてきたものを、見なかったことにしない。今なら小さいうちに手が打てる"
+      }
+    },
+    {
+      "id": 19,
+      "number": "XIX",
+      "name": "太陽",
+      "name_en": "The Sun",
+      "image": "19-sun.jpg",
+      "keywords": ["成功", "明朗", "祝福", "生命力", "はっきりする"],
+      "upright": {
+        "general": "物事がはっきりして 良い方向に進む。隠す必要がなくなる",
+        "love": "関係が明るく安定する。公にできる関係",
+        "work": "成果が出る。評価され、次につながる",
+        "relationship": "素直な自分で人と関われる。周囲が味方になる",
+        "self": "気力が充実している。自分を肯定できている",
+        "guidance": "隠さず前に出る。今は堂々としているほど物事がうまく運ぶ"
+      },
+      "reversed": {
+        "general": "勢いが落ちている。または喜びを素直に受け取れない",
+        "love": "うまくいっているのに不安が消えない。または熱が下がっている",
+        "work": "成果はあるが実感がない。空回り気味",
+        "relationship": "無理に明るく振る舞って疲れている",
+        "self": "自己肯定感が下がっている",
+        "guidance": "うまくいっている部分を三つ数える。過小評価しているだけの可能性が高い"
+      }
+    },
+    {
+      "id": 20,
+      "number": "XX",
+      "name": "審判",
+      "name_en": "Judgement",
+      "image": "20-judgement.jpg",
+      "keywords": ["復活", "再開", "決断", "呼び戻し", "総決算"],
+      "upright": {
+        "general": "過去のものが再び動き出す。やり直しがきく局面",
+        "love": "復縁や再会。過去の関係が新しい形で戻る",
+        "work": "中断していた企画が再始動する。過去の実績が評価される",
+        "relationship": "疎遠だった人との再会。縁がつながり直す",
+        "self": "自分の役割に気づく。腹が決まる",
+        "guidance": "諦めたつもりのものを、もう一度だけ確認する。今なら再開する条件が揃っている"
+      },
+      "reversed": {
+        "general": "過去にとらわれている。または決断を先送りにしている",
+        "love": "終わった関係を引きずっている",
+        "work": "同じ失敗を繰り返している。過去の反省が活きていない",
+        "relationship": "戻すべきでない関係を戻そうとしている",
+        "self": "後悔から抜け出せない",
+        "guidance": "過去を評価し直すのをやめて、今日できることを一つ実行する。反省より行動が効く段階"
+      }
+    },
+    {
+      "id": 21,
+      "number": "XXI",
+      "name": "世界",
+      "name_en": "The World",
+      "image": "21-world.jpg",
+      "keywords": ["完成", "達成", "統合", "区切り", "次の段階へ"],
+      "upright": {
+        "general": "ひとつのサイクルが完成する。目指していた形に到達する",
+        "love": "関係が完成形に近づく。長く続く関係",
+        "work": "プロジェクトの完了。ひとつの到達点",
+        "relationship": "居場所が定まる。所属できる場がある",
+        "self": "自分らしさが完成している。満ち足りている",
+        "guidance": "ここで一度きちんと終わらせる。完成を認めないと、次のサイクルが始まらない"
+      },
+      "reversed": {
+        "general": "あと一歩で完成しない。または終わらせるのが惜しい",
+        "love": "関係が固まりきらない。次の段階に進めていない",
+        "work": "仕上げが残っている。詰めの甘さが出る",
+        "relationship": "馴染みきれていない場所にいる",
+        "self": "満たされない感覚。何かが足りない",
+        "guidance": "完璧を待たずに一度提出する。九割で終わらせた方が、十割を狙って止まるより前に進む"
+      }
+    }
+  ]
+};
+const CTX = DATA.contexts;
+const CTX_KEYS = Object.keys(CTX);
+let curCtx = 'general';
+let masked = false;
+let lastDraw = null;
+
+const $ = id => document.getElementById(id);
+const imgTag = (c, rev) =>
+  `<img src="img/tarot/${c.image}" alt="${c.name}" loading="lazy"
+     onerror="this.parentNode.innerHTML='<span>'+${JSON.stringify(c.number)}+'</span>'">`;
+
+/* ---- タブ ---- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  $('tab-list').classList.toggle('hide', t.dataset.tab!=='list');
+  $('tab-draw').classList.toggle('hide', t.dataset.tab!=='draw');
+  window.scrollTo(0,0);
+});
+
+/* ---- 文脈セレクタ ---- */
+$('segCtx').innerHTML = CTX_KEYS.map(k=>
+  `<button data-k="${k}" class="${k===curCtx?'on':''}">${CTX[k].split('・')[0]}</button>`).join('');
+$('segCtx').onclick = e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  curCtx=b.dataset.k;
+  $('segCtx').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  if(!$('detail').classList.contains('hide')) openCard(+$('detail').dataset.id);
+};
+$('dCtx').innerHTML = CTX_KEYS.map(k=>`<option value="${k}">${CTX[k]}</option>`).join('');
+
+$('btnMask').onclick = ()=>{ masked=!masked; $('btnMask').classList.toggle('on',masked);
+  if(!$('detail').classList.contains('hide')) openCard(+$('detail').dataset.id); };
+
+/* ---- 一覧 ---- */
+$('grid').innerHTML = DATA.cards.map(c=>
+  `<div class="thumb" onclick="openCard(${c.id})">
+     <div class="ph">${imgTag(c)}</div>
+     <b>${c.name}</b><i>${c.number}</i>
+   </div>`).join('');
+
+/* ---- 詳細 ---- */
+function openCard(id){
+  const c = DATA.cards.find(x=>x.id===id);
+  const d = $('detail'); d.dataset.id = id;
+  const block = (o, rev) => `
+    <span class="ori${rev?' r':''}">${rev?'逆位置':'正位置'}</span>
+    <dl style="margin:0">
+      ${CTX_KEYS.map(k=>`<div class="mrow"><dt>${CTX[k]}</dt>
+        <dd class="${masked&&k!==curCtx?'masked':''}" onclick="this.classList.remove('masked')">${o[k]}</dd></div>`).join('')}
+    </dl>
+    <div class="guide">${o.guidance}</div>`;
+  d.innerHTML = `<button class="close" onclick="closeCard()">×</button>
+    <div class="dhead">
+      <div class="ph">${imgTag(c)}</div>
+      <div>
+        <p class="dname">${c.name}</p>
+        <p class="den">${c.name_en} ・ ${c.number}</p>
+        <div class="kw">${c.keywords.map(k=>`<span>${k}</span>`).join('')}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:18px">${block(c.upright,false)}</div>
+    <div>${block(c.reversed,true)}</div>`;
+  d.classList.remove('hide'); d.scrollTop=0;
+}
+function closeCard(){ $('detail').classList.add('hide'); }
+
+/* ---- 引く ---- */
+function draw(spreadId){
+  const sp = DATA.spreads.find(s=>s.id===spreadId);
+  const ctx = $('dCtx').value;
+  const pool = DATA.cards.slice();
+  const buf = new Uint32Array(pool.length);
+  crypto.getRandomValues(buf);
+  for(let i=pool.length-1;i>0;i--){ const j=buf[i]%(i+1); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  const flip = new Uint8Array(sp.card_count); crypto.getRandomValues(flip);
+  const picks = pool.slice(0,sp.card_count).map((c,i)=>({card:c, reversed: flip[i]%2===1}));
+
+  $('drawOut').innerHTML = picks.map((p,i)=>{
+    const o = p.reversed ? p.card.reversed : p.card.upright;
+    const label = sp.card_count>1 ? sp.positions[i].label : '答え';
+    return `<div class="card">
+      <div class="pos">${label}</div>
+      <div class="cbody">
+        <div class="ph${p.reversed?' rev':''}">${imgTag(p.card)}</div>
+        <div>
+          <p class="cname">${p.card.name}</p>
+          <span class="ori${p.reversed?' r':''}">${p.reversed?'逆位置':'正位置'}</span>
+          <p class="meaning">${o[ctx]}</p>
+        </div>
+      </div>
+      <div class="guide">${o.guidance}</div>
+    </div>`;
+  }).join('');
+
+  lastDraw = {
+    mode:'tarot',
+    name: $('dName').value.trim() || 'あなた',
+    question: $('dQ').value.trim() || '(相談内容なし)',
+    spread: sp.name,
+    context: CTX[ctx],
+    cards: picks.map((p,i)=>({
+      position: sp.card_count>1 ? sp.positions[i].label : '答え',
+      card: p.card.name,
+      orientation: p.reversed ? '逆位置' : '正位置',
+      meaning: (p.reversed?p.card.reversed:p.card.upright)[ctx],
+      guidance: (p.reversed?p.card.reversed:p.card.upright).guidance
+    }))
+  };
+  $('aiPanel').classList.remove('hide');
+  $('aiOut').textContent=''; $('aiBtn').disabled=false;
+}
+
+/* ---- プロンプトをコピー ---- */
+function buildPrompt(){
+  const d = lastDraw;
+  const cards = d.cards.map(c=>
+    `■ ${c.position}\n${c.card}（${c.orientation}）\n意味：${c.meaning}\n指針：${c.guidance}`
+  ).join('\n\n');
+  return `以下のタロットの結果をもとに、鑑定文を書いてください。
+
+【書き方の条件】
+・${d.name}さんへの手紙として、名前で語りかける形で書く
+・審判者ではなく、隣に立つ伴走者の姿勢で書く
+・カードを1枚ずつ解説せず、全体をひとつながりの状況として描く
+・カード名を並べ立てない
+・逆位置を「悪い」と書かない。方向性の違いとして扱う
+・困難な内容には必ず建設的な指針を添える
+・見出しや記号（#、*、-）を使わず、散文で書く
+・締めくくりは抽象的なムードではなく、具体的な日常の一場面で終える
+・以下に書かれていない象徴（数秘、四大元素、カバラなど）を持ち出さない
+
+【相談内容】
+${d.question}
+
+【引き方】${d.spread}
+【読む文脈】${d.context}
+
+${cards}`;
+}
+
+function copyPrompt(){
+  if(!lastDraw) return;
+  const txt = buildPrompt(), btn = $('copyBtn'), orig = 'プロンプトをコピー';
+  const done = ok => { btn.textContent = ok ? 'コピーしました' : 'コピーできませんでした';
+    setTimeout(()=>btn.textContent=orig, 1600); };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(()=>done(true),()=>fallback());
+  } else fallback();
+  function fallback(){
+    const ta=document.createElement('textarea');
+    ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); done(ok);
+  }
+}
+
+/* ---- AI 鑑定 ---- */
+async function callAi(){
+  if(!lastDraw) return;
+  const btn=$('aiBtn'), out=$('aiOut');
+  btn.disabled=true; out.className=''; out.textContent='鑑定文を準備しています...';
+  try{
+    const res = await fetch('/api/ai-fortune',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(lastDraw)
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf='';
+    out.textContent='';
+    while(true){
+      const {done,value} = await reader.read();
+      if(done) break;
+      buf += dec.decode(value,{stream:true});
+      out.textContent = buf.replace(/__WAITING__[\s\S]*?__END_WAITING__/g,'').replace(/\u200b/g,'');
+    }
+  }catch(e){
+    out.className='err';
+    out.textContent='API を呼び出せませんでした（'+e.message+'）。このページを itsuki-auto-fortune のリポジトリ直下に置いて本番で開くと動きます。';
+  }
+  btn.disabled=false;
+}
+</script>
+</body>
+</html>
