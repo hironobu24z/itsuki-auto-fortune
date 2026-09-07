@@ -353,6 +353,27 @@ h1 { text-align:center; font-family:var(--font-display); font-size:21px; font-we
   background:repeating-linear-gradient(135deg,#f4f1ea 0 8px,#faf8f3 8px 16px);
   color:#b9b2a4; font-size:10px; text-align:center; padding:6px;
 }
+/* 無料版のテンプレート鑑定文 */
+.tarot-free {
+  margin-top:16px; padding:18px 20px; border-radius:12px;
+  background:rgba(255,255,255,0.92); border:1px solid #ece6d8;
+  white-space:pre-wrap; line-height:1.95; font-size:14px; color:#222;
+}
+.tarot-upsell {
+  margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);
+  font-size:13px; color:var(--ink-soft); line-height:1.8;
+}
+.tarot-ai-btn {
+  margin-top:10px; width:100%; padding:13px 0; border-radius:10px;
+  border:1px solid var(--gold); background:#fffbf0; color:var(--gold);
+  font-size:13.5px; font-weight:700; cursor:pointer; -webkit-appearance:none; transition: all .15s;
+}
+.tarot-ai-btn:active { background:var(--gold); color:#fff; }
+.tarot-ai-btn:disabled { opacity:.55; cursor:default; }
+.tarot-sanmei {
+  margin-top:18px; padding:14px 16px; border-radius:10px; background:var(--glass);
+  border:1px solid var(--line); font-size:13px; color:var(--ink-soft); line-height:1.8; text-align:center;
+}
 </style>
 </head>
 <body>
@@ -1400,7 +1421,9 @@ var tarotState = {
 /** カードデータの読み込み。1度読んだら使い回す */
 function loadTarotData(){
   if(tarotState.data) return Promise.resolve(tarotState.data);
-  return fetch('/data/tarot-data.json', {cache:'force-cache'}).then(function(res){
+  // force-cache だと、データを直したあとも再訪者が古いJSONを使い続けてしまう。
+  // no-cache は必ずサーバに問い合わせるが、変更がなければ304で返るので負荷はほぼない。
+  return fetch('/data/tarot-data.json', {cache:'no-cache'}).then(function(res){
     if(!res.ok) throw new Error('カードデータの取得に失敗しました（status '+res.status+'）');
     return res.json();
   }).then(function(json){
@@ -1441,6 +1464,111 @@ function drawTarotCards(spread){
     out.push({ card: deck[k], position: spread.positions[k], reversed: tarotRand(2)===1 });
   }
   return out;
+}
+
+/**
+ * 無料版の鑑定文テンプレート。
+ *
+ * AI を使わず tarot-data.json だけで組み立てる。API 呼び出しはゼロ。
+ * 有料版（AI）との差は分量ではなく種類で、こちらは「カードが示している状況の説明」、
+ * AI は「相談内容への返答」。そのため相談内容はここでは参照しない。
+ *
+ * 同じ型の繰り返しを避けるため、各スロットに複数パターンを持たせて
+ * crypto で選ぶ。1回の鑑定内で同じ表現は二度使わない。
+ */
+var TAROT_PHRASES = {
+  // 「◯◯さん」「あなた」に直接続く形。先頭の読点込みで持つ
+  open: [
+    '、今日出たカードから見ていきますね。',
+    '、ここに出ているものをお伝えします。',
+    '、まずは全体の流れから見ていきましょう。',
+    '、出たカードを読んでいきます。',
+    '、さっそく見ていきましょう。'
+  ],
+  // {m} にカードの意味を差し込む。つなぎと語尾を分けず文全体で持つので相性の問題が起きない
+  past: [
+    'これまでにあったのは、{m}。そういう時間でした。',
+    '振り返ってみると、{m}。そんな道のりだったようです。',
+    'ここに至るまでに、{m}。そういうことがありました。',
+    '背景にあるのは、{m}。ここが土台になっています。',
+    '少し前までは、{m}。そんな流れの中にいました。'
+  ],
+  present: [
+    'そして今は、{m}。そういうところにいます。',
+    '現在地はここです。{m}。ちょうどその只中です。',
+    'いま向き合っているのは、{m}。そんな状況です。',
+    '足元を見ると、{m}。今はここに立っています。',
+    '今の時期は、{m}。そういう場所を通っています。'
+  ],
+  future: [
+    'このまま進むと、{m}。そちらに向かっていきます。',
+    '先に見えているのは、{m}。そういう景色です。',
+    'この延長にあるのは、{m}。そこへ続いています。',
+    'そのまま歩けば、{m}。そこに行き着きます。',
+    '向かう先は、{m}。そんな展開が待っています。'
+  ],
+  toGuide: [
+    'ここから動くとしたら、この一点です。',
+    'いま手がかりになるのは、次のことです。',
+    'この場面で持っておくといい見方があります。',
+    'ひとつだけ、覚えておいてほしいことがあります。',
+    '先に進むための足がかりを置いておきます。'
+  ]
+};
+
+/** 1鑑定内で同じ表現を二度使わないように、使用済みを覚えながら選ぶ */
+function pickPhrase(list, used){
+  var pool = list.filter(function(x){ return used.indexOf(x) === -1; });
+  if(!pool.length) pool = list;
+  var v = pool[tarotRand(pool.length)];
+  used.push(v);
+  return v;
+}
+
+/** 末尾の句点を落とす */
+function trimEnd(s){ return String(s).replace(/[。．]\s*$/, ''); }
+
+/**
+ * 1文目だけを取り出す。
+ * スリーカードの型は「〜という流れです」と体言に接続するため、
+ * 述語で終わる2文目まで入れると文が壊れる。
+ */
+function firstSentence(s){ return trimEnd(s).split('。')[0]; }
+
+/**
+ * 引いたカードからテンプレート文章を組み立てる。
+ * カード名は本文に出さない（画像の下に表示済みで、名前を出すと不安を煽るため）。
+ */
+function buildFreeReading(drawn, ctxKey, name){
+  var used = [];
+  var who = (name || '').trim();
+  // open は「さん」に直接続く形。名前がなければ「あなた」に置き換える
+  who = who ? who + 'さん' : 'あなた';
+
+  var side = function(x){ return x.reversed ? x.card.reversed : x.card.upright; };
+  var fill = function(tpl, m){ return tpl.split('{m}').join(m); };
+  var out = [who + pickPhrase(TAROT_PHRASES.open, used)];
+
+  if(drawn.length === 1){
+    // ワンオラクルは型に流し込まず、意味を全文そのまま段落として置く
+    out.push(trimEnd(side(drawn[0])[ctxKey]) + '。');
+    out.push(pickPhrase(TAROT_PHRASES.toGuide, used) + '\n' + trimEnd(side(drawn[0]).guidance) + '。');
+  } else {
+    out.push(fill(pickPhrase(TAROT_PHRASES.past, used), firstSentence(side(drawn[0])[ctxKey])));
+    out.push(fill(pickPhrase(TAROT_PHRASES.present, used), firstSentence(side(drawn[1])[ctxKey])));
+    out.push(fill(pickPhrase(TAROT_PHRASES.future, used), firstSentence(side(drawn[2])[ctxKey])));
+    // 指針は「現在」のものだけ。結びは足さず、データの文をそのまま置いて終わる
+    out.push(pickPhrase(TAROT_PHRASES.toGuide, used) + '\n' + trimEnd(side(drawn[1]).guidance) + '。');
+  }
+  return out.join('\n\n');
+}
+
+/** テンプレート文の下に置く、AI鑑定への案内 */
+function tarotUpsellText(name){
+  var who = (name || '').trim();
+  return who
+    ? 'もっと詳しく、' + who + 'さんのご相談そのものに沿って読むこともできます。'
+    : 'もっと詳しく、ご相談そのものに沿って読むこともできます。';
 }
 
 /** 引いたカードを絵柄で表示。逆位置は180度回転させる */
@@ -1491,15 +1619,27 @@ function renderTarot(){
   }
   html += '</div><div class="tarot-spread-desc" id="tarot-spread-desc">'+esc(currentSpread().description)+'</div></div>';
 
-  html += '<button class="calc-btn" id="tarot-draw-btn" onclick="startTarotFortune()">カードを引く</button>';
+  html += '<button class="calc-btn" id="tarot-draw-btn" onclick="drawAndRead()">カードを引く</button>';
   html += '</div>';
 
   html += '<div id="tarot-cards-area"></div>';
+
+  // 順序は「テンプレート文 → AIボタン → AIの鑑定文 → 算命学への導線」。
+  // 無料の文章を読んだ人だけが有料に進む導線にするため、AIボタンは必ず文章の下に置く。
+  html += '<div id="tarot-free-area" style="display:none">';
+  html += '<div class="tarot-free" id="tarot-free"></div>';
+  html += '<div class="tarot-upsell" id="tarot-upsell"></div>';
+  html += '<button class="tarot-ai-btn" id="tarot-ai-btn" onclick="startTarotAiReading()">相談内容に沿って読んでもらう</button>';
+  html += '</div>';
 
   html += '<div class="ai-result-box" id="tarot-result-area" style="display:none">';
   html += '<div class="ai-result-title">いつきからの鑑定</div>';
   html += '<div class="ai-result-content" id="tarot-result"></div>';
   html += '<button class="ai-copy-btn" id="tarot-copy-btn" onclick="copyTarotResult()">結果をコピーする</button>';
+  html += '</div>';
+
+  html += '<div class="tarot-sanmei" id="tarot-sanmei" style="display:none">';
+  html += '生年月日がわかれば、算命学であなたの生まれ持った性質からも読み解けます。';
   html += '</div>';
 
   html += '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px">';
@@ -1561,19 +1701,48 @@ function showTarot(){
   });
 }
 
-function startTarotFortune(){
+/**
+ * カードを引いて、その場でテンプレート鑑定文まで出す。ここでは API を呼ばない。
+ * AI鑑定は文章を読んだあとに別ボタン（startTarotAiReading）から。
+ */
+function drawAndRead(){
   var btn = document.getElementById('tarot-draw-btn');
   var spread = currentSpread();
   var drawn = drawTarotCards(spread);
   tarotState.drawn = drawn;
   renderTarotCards(drawn);
 
+  // テンプレート文章（API呼び出しなし・即時表示）
+  document.getElementById('tarot-free').textContent =
+    buildFreeReading(drawn, tarotState.context, tarotState.name);
+  document.getElementById('tarot-upsell').textContent = tarotUpsellText(tarotState.name);
+  document.getElementById('tarot-free-area').style.display = 'block';
+  document.getElementById('tarot-sanmei').style.display = 'block';
+
+  // 引き直したらAIの結果は消す
+  var area = document.getElementById('tarot-result-area');
+  area.style.display = 'none';
+  document.getElementById('tarot-result').textContent = '';
+  var aiBtn = document.getElementById('tarot-ai-btn');
+  aiBtn.disabled = false;
+  aiBtn.textContent = '相談内容に沿って読んでもらう';
+
+  btn.textContent = 'もう一度引く';
+}
+
+/** 有料側。引いたカードと相談内容をAIに渡して手紙形式の鑑定文を書いてもらう */
+function startTarotAiReading(){
+  if(!tarotState.drawn) return;
+  var drawn = tarotState.drawn;
+  var spread = currentSpread();
+  var aiBtn = document.getElementById('tarot-ai-btn');
   var area = document.getElementById('tarot-result-area');
   var box = document.getElementById('tarot-result');
+
   area.style.display = 'block';
   box.textContent = 'いつきが、並んだカードをじっくり見ています…';
-  btn.disabled = true;
-  btn.textContent = 'カードを読み解いています（約30秒）...';
+  aiBtn.disabled = true;
+  aiBtn.textContent = 'カードを読み解いています（約30秒）...';
 
   // AI に渡すのは仕様書のペイロードのみ。意味は tarot-data.json から引いたものだけ。
   var payload = {
@@ -1599,12 +1768,12 @@ function startTarotFortune(){
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify(payload)
   }).then(function(){
-    btn.disabled = false;
-    btn.textContent = 'もう一度引く';
+    aiBtn.disabled = false;
+    aiBtn.textContent = 'もう一度読んでもらう';
   }).catch(function(e){
     box.innerHTML = '<span style="color:#c4342d">'+ICONS.warn+'エラーが発生しました：'+esc(e.message)+'</span>';
-    btn.disabled = false;
-    btn.textContent = 'もう一度引く';
+    aiBtn.disabled = false;
+    aiBtn.textContent = '相談内容に沿って読んでもらう';
   });
 }
 

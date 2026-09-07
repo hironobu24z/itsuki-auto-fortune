@@ -87,9 +87,6 @@ function buildTarotPrompt(d) {
   return `【タロット鑑定リクエスト】\n${JSON.stringify(payload, null, 2)}`;
 }
 
-/** タロット鑑定の末尾に必ず付ける導線。AIには生成させず、ここで固定文として足す */
-const TAROT_CLOSING = "\n\nもし生年月日がわかれば、算命学であなたの生まれ持った性質からさらに深く読み解けます。";
-
 function getTodayInfoJP() {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat('ja-JP', {
@@ -135,7 +132,6 @@ export default async function handler(req) {
   const stream = new ReadableStream({
     async start(controller) {
       let done = false;
-      let streamed = false;
 
       // 45秒ごとにゼロ幅スペースを送るだけ。Geminiへのリクエストは一切リセットしない。
       const keepAlive = setInterval(() => {
@@ -156,7 +152,6 @@ export default async function handler(req) {
           controller.enqueue(enc.encode(`エラー: ${e?.error?.message || "Gemini APIエラー"}`));
           done = true; clearInterval(keepAlive); controller.close(); return;
         }
-        streamed = true;
         const reader = geminiRes.body.getReader();
         const decoder = new TextDecoder();
         let buf = "";
@@ -179,11 +174,8 @@ export default async function handler(req) {
           }
         }
       } catch(e) {
-        streamed = false;
         controller.enqueue(enc.encode(`エラー: ${e.message}`));
       }
-      // タロットのみ、鑑定文の最後に算命学への導線を固定文で足す
-      if (isTarot && streamed) controller.enqueue(enc.encode(TAROT_CLOSING));
       done = true; clearInterval(keepAlive); controller.close();
     }
   });
