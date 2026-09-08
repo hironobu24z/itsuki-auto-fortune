@@ -1467,98 +1467,39 @@ function drawTarotCards(spread){
 }
 
 /**
- * 無料版の鑑定文テンプレート。
+ * 無料版の鑑定文。
  *
  * AI を使わず tarot-data.json だけで組み立てる。API 呼び出しはゼロ。
  * 有料版（AI）との差は分量ではなく種類で、こちらは「カードが示している状況の説明」、
  * AI は「相談内容への返答」。そのため相談内容はここでは参照しない。
  *
- * 同じ型の繰り返しを避けるため、各スロットに複数パターンを持たせて
- * crypto で選ぶ。1回の鑑定内で同じ表現は二度使わない。
+ * 本文は text フィールドをそのまま置く。つなぎ言葉で挟む加工はしない。
+ * カード名と正逆は見出しに出す。「今この状況にこのカードが出た」という構造が
+ * 説明の土台で、隠すと何を根拠にした文なのか分からなくなる。
  */
-var TAROT_PHRASES = {
-  // 「◯◯さん」「あなた」に直接続く形。先頭の読点込みで持つ
-  open: [
-    '、今日出たカードから見ていきますね。',
-    '、ここに出ているものをお伝えします。',
-    '、まずは全体の流れから見ていきましょう。',
-    '、出たカードを読んでいきます。',
-    '、さっそく見ていきましょう。'
-  ],
-  // {m} にカードの意味を差し込む。つなぎと語尾を分けず文全体で持つので相性の問題が起きない
-  past: [
-    'これまでにあったのは、{m}。そういう時間でした。',
-    '振り返ってみると、{m}。そんな道のりだったようです。',
-    'ここに至るまでに、{m}。そういうことがありました。',
-    '背景にあるのは、{m}。ここが土台になっています。',
-    '少し前までは、{m}。そんな流れの中にいました。'
-  ],
-  present: [
-    'そして今は、{m}。そういうところにいます。',
-    '現在地はここです。{m}。ちょうどその只中です。',
-    'いま向き合っているのは、{m}。そんな状況です。',
-    '足元を見ると、{m}。今はここに立っています。',
-    '今の時期は、{m}。そういう場所を通っています。'
-  ],
-  future: [
-    'このまま進むと、{m}。そちらに向かっていきます。',
-    '先に見えているのは、{m}。そういう景色です。',
-    'この延長にあるのは、{m}。そこへ続いています。',
-    'そのまま歩けば、{m}。そこに行き着きます。',
-    '向かう先は、{m}。そんな展開が待っています。'
-  ],
-  toGuide: [
-    'ここから動くとしたら、この一点です。',
-    'いま手がかりになるのは、次のことです。',
-    'この場面で持っておくといい見方があります。',
-    'ひとつだけ、覚えておいてほしいことがあります。',
-    '先に進むための足がかりを置いておきます。'
-  ]
-};
-
-/** 1鑑定内で同じ表現を二度使わないように、使用済みを覚えながら選ぶ */
-function pickPhrase(list, used){
-  var pool = list.filter(function(x){ return used.indexOf(x) === -1; });
-  if(!pool.length) pool = list;
-  var v = pool[tarotRand(pool.length)];
-  used.push(v);
-  return v;
-}
-
-/** 末尾の句点を落とす */
-function trimEnd(s){ return String(s).replace(/[。．]\s*$/, ''); }
-
-/**
- * 1文目だけを取り出す。
- * スリーカードの型は「〜という流れです」と体言に接続するため、
- * 述語で終わる2文目まで入れると文が壊れる。
- */
-function firstSentence(s){ return trimEnd(s).split('。')[0]; }
-
-/**
- * 引いたカードからテンプレート文章を組み立てる。
- * カード名は本文に出さない（画像の下に表示済みで、名前を出すと不安を煽るため）。
- */
-function buildFreeReading(drawn, ctxKey, name){
-  var used = [];
+function buildTarotReading(drawn, ctxKey, name){
   var who = (name || '').trim();
-  // open は「さん」に直接続く形。名前がなければ「あなた」に置き換える
   who = who ? who + 'さん' : 'あなた';
 
   var side = function(x){ return x.reversed ? x.card.reversed : x.card.upright; };
-  var fill = function(tpl, m){ return tpl.split('{m}').join(m); };
-  var out = [who + pickPhrase(TAROT_PHRASES.open, used)];
+  // データ側は末尾に句点を持たない文があるので、重複させずに補う
+  var end = function(s){ return String(s).replace(/[。．]\s*$/, '') + '。'; };
+
+  var out = [who + '、今日出たカードから見ていきますね。'];
 
   if(drawn.length === 1){
-    // ワンオラクルは型に流し込まず、意味を全文そのまま段落として置く
-    out.push(trimEnd(side(drawn[0])[ctxKey]) + '。');
-    out.push(pickPhrase(TAROT_PHRASES.toGuide, used) + '\n' + trimEnd(side(drawn[0]).guidance) + '。');
+    // ワンオラクルは見出しを立てず、本文をそのまま置く
+    out.push(end(side(drawn[0]).text[ctxKey]));
+    out.push(end(side(drawn[0]).guidance));
   } else {
-    out.push(fill(pickPhrase(TAROT_PHRASES.past, used), firstSentence(side(drawn[0])[ctxKey])));
-    out.push(fill(pickPhrase(TAROT_PHRASES.present, used), firstSentence(side(drawn[1])[ctxKey])));
-    out.push(fill(pickPhrase(TAROT_PHRASES.future, used), firstSentence(side(drawn[2])[ctxKey])));
+    for(var i=0;i<drawn.length;i++){
+      var x = drawn[i];
+      out.push('■ ' + x.position.label + '\u3000' + x.card.name +
+               '（' + (x.reversed ? '逆位置' : '正位置') + '）\n' +
+               end(side(x).text[ctxKey]));
+    }
     // 指針は「現在」のものだけ。結びは足さず、データの文をそのまま置いて終わる
-    out.push(pickPhrase(TAROT_PHRASES.toGuide, used) + '\n' + trimEnd(side(drawn[1]).guidance) + '。');
+    out.push(end(side(drawn[1]).guidance));
   }
   return out.join('\n\n');
 }
@@ -1714,7 +1655,7 @@ function drawAndRead(){
 
   // テンプレート文章（API呼び出しなし・即時表示）
   document.getElementById('tarot-free').textContent =
-    buildFreeReading(drawn, tarotState.context, tarotState.name);
+    buildTarotReading(drawn, tarotState.context, tarotState.name);
   document.getElementById('tarot-upsell').textContent = tarotUpsellText(tarotState.name);
   document.getElementById('tarot-free-area').style.display = 'block';
   document.getElementById('tarot-sanmei').style.display = 'block';
