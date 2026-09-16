@@ -1451,10 +1451,16 @@ function tarotRand(n){
 
 /**
  * シャッフル・抽選・正逆判定。すべてクライアント側で完結させる。
- * Fisher-Yates で22枚を混ぜて先頭から取るので、1回の鑑定内で同じカードは出ない。
+ * Fisher-Yates で混ぜて先頭から取るので、1回の鑑定内で同じカードは出ない。
+ *
+ * 相談者向けは大アルカナ22枚のみを対象にする。tarot-data.json は78枚（小アルカナ56枚を含む）
+ * だが、小アルカナは鑑定文 text を持たないあんちょこ用のデータで、引かせると鑑定文が作れない。
+ * arcana を持たない古いデータでも22枚のまま動くよう、絞り込みが空なら全件に戻す。
  */
 function drawTarotCards(spread){
-  var deck = tarotState.data.cards.slice();
+  var all = tarotState.data.cards;
+  var major = all.filter(function(c){ return c.arcana === 'major'; });
+  var deck = (major.length >= spread.card_count ? major : all).slice();
   for(var i=deck.length-1;i>0;i--){
     var j = tarotRand(i+1);
     var t = deck[i]; deck[i] = deck[j]; deck[j] = t;
@@ -1485,18 +1491,29 @@ function buildTarotReading(drawn, ctxKey, name){
   // データ側は末尾に句点を持たない文があるので、重複させずに補う
   var end = function(s){ return String(s).replace(/[。．]\s*$/, '') + '。'; };
 
+  /**
+   * 本文。鑑定文 text があればそれを、無ければ同じ文脈の意味（meaning）で代替する。
+   * text を持つのは大アルカナだけで、抽選も大アルカナに絞ってあるので通常は text を使う。
+   * データが増えたときに画面が止まらないための保険。
+   */
+  var body = function(x){
+    var s = side(x);
+    var t = s.text && s.text[ctxKey];
+    return end(t || s[ctxKey] || s.general);
+  };
+
   var out = [who + '、今日出たカードから見ていきますね。'];
 
   if(drawn.length === 1){
     // ワンオラクルは見出しを立てず、本文をそのまま置く
-    out.push(end(side(drawn[0]).text[ctxKey]));
+    out.push(body(drawn[0]));
     out.push(end(side(drawn[0]).guidance));
   } else {
     for(var i=0;i<drawn.length;i++){
       var x = drawn[i];
       out.push('■ ' + x.position.label + '\u3000' + x.card.name +
                '（' + (x.reversed ? '逆位置' : '正位置') + '）\n' +
-               end(side(x).text[ctxKey]));
+               body(x));
     }
     // 指針は「現在」のものだけ。結びは足さず、データの文をそのまま置いて終わる
     out.push(end(side(drawn[1]).guidance));
