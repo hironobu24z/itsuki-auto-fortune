@@ -1451,16 +1451,13 @@ function tarotRand(n){
 
 /**
  * シャッフル・抽選・正逆判定。すべてクライアント側で完結させる。
- * Fisher-Yates で混ぜて先頭から取るので、1回の鑑定内で同じカードは出ない。
+ * Fisher-Yates で22枚を混ぜて先頭から取るので、1回の鑑定内で同じカードは出ない。
  *
- * 相談者向けは大アルカナ22枚のみを対象にする。tarot-data.json は78枚（小アルカナ56枚を含む）
- * だが、小アルカナは鑑定文 text を持たないあんちょこ用のデータで、引かせると鑑定文が作れない。
- * arcana を持たない古いデータでも22枚のまま動くよう、絞り込みが空なら全件に戻す。
+ * 相談者向けの tarot-data.json は大アルカナ22枚だけを持つので、ここでは絞り込まない。
+ * 小アルカナを含む78枚版は data/tarot-data-78.json（あんちょこ用）に分けてある。
  */
 function drawTarotCards(spread){
-  var all = tarotState.data.cards;
-  var major = all.filter(function(c){ return c.arcana === 'major'; });
-  var deck = (major.length >= spread.card_count ? major : all).slice();
+  var deck = tarotState.data.cards.slice();
   for(var i=deck.length-1;i>0;i--){
     var j = tarotRand(i+1);
     var t = deck[i]; deck[i] = deck[j]; deck[j] = t;
@@ -1493,8 +1490,8 @@ function buildTarotReading(drawn, ctxKey, name){
 
   /**
    * 本文。鑑定文 text があればそれを、無ければ同じ文脈の意味（meaning）で代替する。
-   * text を持つのは大アルカナだけで、抽選も大アルカナに絞ってあるので通常は text を使う。
-   * データが増えたときに画面が止まらないための保険。
+   * 相談者向けのデータは text を持つ大アルカナ22枚だけなので、通常は text を使う。
+   * 読み込むデータが差し替わっても画面が止まらないための保険。
    */
   var body = function(x){
     var s = side(x);
