@@ -1432,8 +1432,19 @@ function loadTarotData(){
   });
 }
 
+/**
+ * 相談者向けに出すスプレッド。
+ * データには6種あるが、10枚引きは読む負担が大きいので、ここに挙げた2つだけを出す。
+ * 残り（二者択一・ホースシュー・ヘキサグラム・ケルト十字）はあんちょこ側で使う。
+ */
+var TAROT_SPREADS = ['one_oracle', 'three_card'];
+
+function tarotSpreads(){
+  return tarotState.data.spreads.filter(function(s){ return TAROT_SPREADS.indexOf(s.id) >= 0; });
+}
+
 function currentSpread(){
-  var list = tarotState.data.spreads;
+  var list = tarotSpreads();
   for(var i=0;i<list.length;i++){ if(list[i].id===tarotState.spread) return list[i]; }
   return list[0];
 }
@@ -1568,8 +1579,9 @@ function renderTarot(){
   html += '</div></div>';
 
   html += '<div style="margin-bottom:14px"><span class="form-label">引き方</span><div class="tarot-chip-row">';
-  for(var j=0;j<d.spreads.length;j++){
-    var sp = d.spreads[j];
+  var spreads = tarotSpreads();
+  for(var j=0;j<spreads.length;j++){
+    var sp = spreads[j];
     html += '<button class="tarot-chip'+(tarotState.spread===sp.id?' active':'')+'" data-spread="'+esc(sp.id)+'">'+esc(sp.name)+'（'+sp.card_count+'枚）</button>';
   }
   html += '</div><div class="tarot-spread-desc" id="tarot-spread-desc">'+esc(currentSpread().description)+'</div></div>';

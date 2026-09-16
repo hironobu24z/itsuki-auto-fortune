@@ -48,6 +48,183 @@
           "meaning": "このまま進んだ場合に向かう方向。確定ではなく傾向"
         }
       ]
+    },
+    {
+      "id": "two_choice",
+      "name": "二者択一",
+      "card_count": 5,
+      "description": "AとB、二つの選択肢それぞれの行く先を比べる。どちらかに決めたいときに使う。",
+      "positions": [
+        {
+          "index": 0,
+          "label": "現状",
+          "meaning": "選択を迫られている、今の立ち位置"
+        },
+        {
+          "index": 1,
+          "label": "Aの経過",
+          "meaning": "Aを選んだ場合、途中で起きること"
+        },
+        {
+          "index": 2,
+          "label": "Aの結果",
+          "meaning": "Aを選んだ場合、行き着く先"
+        },
+        {
+          "index": 3,
+          "label": "Bの経過",
+          "meaning": "Bを選んだ場合、途中で起きること"
+        },
+        {
+          "index": 4,
+          "label": "Bの結果",
+          "meaning": "Bを選んだ場合、行き着く先"
+        }
+      ]
+    },
+    {
+      "id": "horseshoe",
+      "name": "ホースシュー",
+      "card_count": 7,
+      "description": "時系列に沿って7枚を並べる。流れを追いながら、周囲の影響と結果まで読む。",
+      "positions": [
+        {
+          "index": 0,
+          "label": "過去",
+          "meaning": "今につながっている、すでに終わったこと"
+        },
+        {
+          "index": 1,
+          "label": "現在",
+          "meaning": "いま起きていること"
+        },
+        {
+          "index": 2,
+          "label": "近い未来",
+          "meaning": "これからすぐに起きること"
+        },
+        {
+          "index": 3,
+          "label": "取るべき行動",
+          "meaning": "相談者自身が選べる手"
+        },
+        {
+          "index": 4,
+          "label": "周囲の状況",
+          "meaning": "自分では動かせない、外側の条件"
+        },
+        {
+          "index": 5,
+          "label": "障害",
+          "meaning": "進行を妨げているもの"
+        },
+        {
+          "index": 6,
+          "label": "最終結果",
+          "meaning": "この流れが行き着く先"
+        }
+      ]
+    },
+    {
+      "id": "hexagram",
+      "name": "ヘキサグラム",
+      "card_count": 7,
+      "description": "六芒星の形に6枚を置き、中央に結果を1枚。相手の本心まで含めて読む。対人や恋愛に向く。",
+      "positions": [
+        {
+          "index": 0,
+          "label": "過去",
+          "meaning": "この状況を作った背景"
+        },
+        {
+          "index": 1,
+          "label": "現在",
+          "meaning": "いま向き合っていること"
+        },
+        {
+          "index": 2,
+          "label": "未来",
+          "meaning": "このまま進んだ場合の展開"
+        },
+        {
+          "index": 3,
+          "label": "対策",
+          "meaning": "自分から打てる手"
+        },
+        {
+          "index": 4,
+          "label": "周囲",
+          "meaning": "まわりの人や環境からの影響"
+        },
+        {
+          "index": 5,
+          "label": "相手の気持ち",
+          "meaning": "相手の側にある、表に出ていない本心"
+        },
+        {
+          "index": 6,
+          "label": "最終結果",
+          "meaning": "すべてを踏まえた行き着く先"
+        }
+      ]
+    },
+    {
+      "id": "celtic_cross",
+      "name": "ケルト十字",
+      "card_count": 10,
+      "description": "10枚で状況を立体的に読む、最も詳しいスプレッド。表に出ていない部分まで扱う。",
+      "positions": [
+        {
+          "index": 0,
+          "label": "現状",
+          "meaning": "相談者が今置かれている状況の核心"
+        },
+        {
+          "index": 1,
+          "label": "障害",
+          "meaning": "現状を横切っているもの。助けにも妨げにもなる"
+        },
+        {
+          "index": 2,
+          "label": "顕在意識",
+          "meaning": "自分で自覚している望みや考え"
+        },
+        {
+          "index": 3,
+          "label": "潜在意識",
+          "meaning": "気づいていない本心。土台にあるもの"
+        },
+        {
+          "index": 4,
+          "label": "過去",
+          "meaning": "今も影響を残している、過ぎたこと"
+        },
+        {
+          "index": 5,
+          "label": "近い未来",
+          "meaning": "これから起きる展開"
+        },
+        {
+          "index": 6,
+          "label": "本人の立場",
+          "meaning": "相談者自身の構え方、取っている態度"
+        },
+        {
+          "index": 7,
+          "label": "周囲の影響",
+          "meaning": "まわりの人や環境が及ぼしていること"
+        },
+        {
+          "index": 8,
+          "label": "希望と不安",
+          "meaning": "望んでいることと、恐れていること"
+        },
+        {
+          "index": 9,
+          "label": "最終結果",
+          "meaning": "すべてを踏まえた行き着く先"
+        }
+      ]
     }
   ],
   "cards": [
